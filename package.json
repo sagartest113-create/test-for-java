@@ -1,0 +1,12 @@
+{
+  "name": "test-for-java",
+  "version": "0.0.1-SNAPSHOT",
+  "description": "Test repository for TestCraft AI - Spring Boot demo",
+  "private": true,
+  "scripts": {
+    "build": "mvn compile",
+    "start": "mvn spring-boot:run",
+    "test": "mvn test",
+    "clean": "mvn clean"
+  }
+}
