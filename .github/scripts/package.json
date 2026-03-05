@@ -1,0 +1,10 @@
+{
+  "name": "testcraft-ai",
+  "version": "1.0.0",
+  "description": "TestCraft AI — Auto test generation for Java PRs via Groq API",
+  "main": "generate-tests.js",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
