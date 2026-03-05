@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const fetch = global.fetch || require('node-fetch');
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -131,19 +132,30 @@ function extractJavaCode(raw) {
 }
 
 async function generateTestForFile(mainPath) {
-  const fullPath = path.join(REPO_ROOT, mainPath);
+
+  const workspace = process.env.GITHUB_WORKSPACE || REPO_ROOT;
+  const fullPath = path.join(workspace, mainPath);
+
+  log(`Checking file: ${fullPath}`);
+
   if (!fs.existsSync(fullPath)) {
-    log(`Skip (not in checkout): ${mainPath}`);
+    log(`Skip (not found): ${mainPath}`);
     return null;
   }
+  log(`Reading file: ${mainPath}`);
   const content = fs.readFileSync(fullPath, 'utf8');
   const testPath = mainPathToTestPath(mainPath);
-  if (!testPath) return null;
+  if (!testPath) {
+    log(`Could not map test path for ${mainPath}`);
+    return null;
+  }
 
   const prompt = `Generate a JUnit 5 test class for this Java file. Put the test class in the same package but under src/test/java, and name the class ${path.basename(testPath, '.java')}.\n\nFile: ${mainPath}\n\n\`\`\`java\n${content}\n\`\`\``;
   const raw = await callGroq(prompt);
   const code = extractJavaCode(raw);
-  const testFullPath = path.join(REPO_ROOT, testPath);
+  const testFullPath = path.join(workspace, testPath);
+  fs.mkdirSync(path.dirname(testFullPath), { recursive: true });
+  fs.writeFileSync(testFullPath, code, 'utf8');
   fs.mkdirSync(path.dirname(testFullPath), { recursive: true });
   fs.writeFileSync(testFullPath, code, 'utf8');
   log(`Generated: ${testPath}`);
