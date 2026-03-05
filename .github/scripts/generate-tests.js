@@ -67,12 +67,15 @@ function mainJavaFiles(files) {
 
 function mainPathToTestPath(mainPath) {
   const normalized = mainPath.replace(/\\/g, '/');
-  if (!normalized.includes('/src/main/java/')) {
+
+  if (!normalized.includes('src/main/java/')) {
     return null;
   }
-  const afterMain = normalized.split('/src/main/java/')[1];
+
+  const afterMain = normalized.split('src/main/java/')[1];
   const base = path.basename(afterMain, '.java');
   const dir = path.dirname(afterMain);
+
   return path.join('src/test/java', dir, `${base}Test.java`).replace(/\\/g, '/');
 }
 
@@ -185,6 +188,8 @@ async function main() {
   try {
     const files = await getPrFiles();
     const toProcess = mainJavaFiles(files);
+    log(`Files in PR: ${files.map(f => f.filename).join(', ')}`);
+    log(`Java files detected: ${toProcess.join(', ')}`);
     log(`Diff analyzed — ${toProcess.length} file(s) to process.`);
 
     const created = [];
