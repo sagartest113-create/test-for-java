@@ -68,9 +68,19 @@ jobs:
               body += '⚠️ `GROQ_API_KEY` is not set. Add it in repo Settings → Secrets → Actions.';
             } else if (fs.existsSync(resultPath)) {
               const r = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-              body += r.success
-                ? `✅ Generated/updated **${r.filesCreated || 0}** test file(s).`
-                : `❌ ${r.error || 'Generation failed.'}`;
+              if (r.success) {
+                body += `✅ Generated **${r.filesCreated || 0}** test file(s).\n\n`;
+                if (r.details) {
+                  body += '| Source File | Test File |\n|---|---|\n';
+                  for (const [src, test] of Object.entries(r.details)) {
+                    const srcShort = src.replace('src/main/java/', '');
+                    const status = test.startsWith('ERROR') ? `❌ ${test}` : `✅ \`${test.replace('src/test/java/', '')}\``;
+                    body += `| \`${srcShort}\` | ${status} |\n`;
+                  }
+                }
+              } else {
+                body += `❌ ${r.error || 'Generation failed.'}`;
+              }
             } else {
               body += '❌ Check the Actions logs for details.';
             }
