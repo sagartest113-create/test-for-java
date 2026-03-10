@@ -4,9 +4,13 @@ on:
   issue_comment:
     types: [created]
 
+concurrency:
+  group: testcraft-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
 jobs:
   generate-tests:
-    if: github.actor != 'github-actions[bot]' && github.event.issue.pull_request != null && contains(github.event.comment.body, '/generate-tests')
+    if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/generate-tests')
     runs-on: ubuntu-latest
 
     permissions:
@@ -25,57 +29,83 @@ jobs:
               repo: context.repo.repo,
               pull_number: context.payload.issue.number
             });
-
             core.setOutput('head_ref', pr.data.head.ref);
             core.setOutput('head_sha', pr.data.head.sha);
+            core.setOutput('base_ref', pr.data.base.ref);
 
       - name: Checkout PR branch
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.pr.outputs.head_ref }}
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20.x'
 
       - name: Install dependencies
-        run: npm install node-fetch
         working-directory: .github/scripts
+        run: npm install node-fetch
 
-      - name: Generate tests
+      - name: Run TestCraft — generate tests
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.issue.number }}
           PR_HEAD_REF: ${{ steps.pr.outputs.head_ref }}
+          PR_HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
         working-directory: .github/scripts
         run: node generate-tests.js
 
-      - name: Comment result
+      - name: Comment on PR with result
         if: always()
         uses: actions/github-script@v7
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         with:
           script: |
             const fs = require('fs');
-
             const resultPath = process.env.GITHUB_WORKSPACE + '/.github/scripts/result.json';
+            let body = '🤖 **TestCraft AI** — ';
 
-            let body = '🤖 **TestCraft AI Result**\n\n';
+            if (process.env.GROQ_API_KEY === '' || !process.env.GROQ_API_KEY) {
+              body += '⚠️ `GROQ_API_KEY` is not set. Add it in repo Settings → Secrets → Actions.';
+            } 
+            else if (fs.existsSync(resultPath)) {
 
-            if (fs.existsSync(resultPath)) {
-              const r = JSON.parse(fs.readFileSync(resultPath,'utf8'));
+              const r = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
 
               if (r.success) {
-                body += `✅ Generated ${r.filesCreated || 0} test file(s).`;
+
+                body += `✅ Generated **${r.filesCreated || 0}** test file(s).\n\n`;
+
+                if (r.details) {
+
+                  body += '| Source File | Test File |\n|---|---|\n';
+
+                  for (const [src, test] of Object.entries(r.details)) {
+
+                    const srcShort = src.replace('src/main/java/', '');
+
+                    const status = test.startsWith('ERROR')
+                      ? `❌ ${test}`
+                      : `✅ \`${test.replace('src/test/java/', '')}\``;
+
+                    body += `| \`${srcShort}\` | ${status} |\n`;
+                  }
+                }
+
               } else {
-                body += `❌ ${r.error}`;
+
+                body += `❌ ${r.error || 'Generation failed.'}`;
               }
 
             } else {
-              body += '❌ No result file found.';
+
+              body += '❌ Check the Actions logs for details.';
             }
 
             await github.rest.issues.createComment({

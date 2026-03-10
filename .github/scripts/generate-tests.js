@@ -2,7 +2,7 @@
 
 /**
  * TestCraft AI — Stable Test Generator
- * Generates JUnit5 tests for changed Java files in PR
+ * Generates JUnit5 tests for Java files in PR
  */
 
 const fs = require("fs");
@@ -21,11 +21,19 @@ const REPO_ROOT =
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = "llama-3.1-8b-instant";
+
 const BATCH_SIZE = 2;
+const DELAY_BETWEEN_BATCH = 6000;
+
+const RESULT_PATH = path.join(__dirname, "result.json");
 
 function log(msg) {
   console.log(`[TestCraft] ${msg}`);
 }
+
+/* ---------------------------------------------------- */
+/* GitHub PR files */
+/* ---------------------------------------------------- */
 
 function getPrFiles() {
   const [owner, repo] = GITHUB_REPOSITORY.split("/");
@@ -73,15 +81,25 @@ function mainJavaFiles(files) {
     .map((f) => f.filename);
 }
 
+/* ---------------------------------------------------- */
+/* Skip low-value files */
+/* ---------------------------------------------------- */
+
 function shouldSkip(file) {
   return (
-    file.includes("/config/") ||
     file.includes("/dto/") ||
     file.includes("/model/") ||
-    file.includes("Exception.java") ||
+    file.includes("/config/") ||
+    file.includes("Exception") ||
+    file.endsWith("Request.java") ||
+    file.endsWith("Response.java") ||
     file.endsWith("Enum.java")
   );
 }
+
+/* ---------------------------------------------------- */
+/* Convert main path → test path */
+/* ---------------------------------------------------- */
 
 function mainPathToTestPath(mainPath) {
   const normalized = mainPath.replace(/\\/g, "/");
@@ -95,14 +113,19 @@ function mainPathToTestPath(mainPath) {
   return `src/test/java/${dir}/${base}Test.java`;
 }
 
-async function callGroq(content) {
-  const body = JSON.stringify({
-    model: MODEL,
-    messages: [
-      {
-        role: "system",
-        content: `
-You are a Java testing expert.
+/* ---------------------------------------------------- */
+/* Groq API with retry */
+/* ---------------------------------------------------- */
+
+async function callGroq(prompt, retries = 300) {
+  try {
+    const body = JSON.stringify({
+      model: MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `
+You are an expert Java testing engineer.
 
 Generate a COMPLETE JUnit5 test class.
 
@@ -114,40 +137,59 @@ Rules:
 - Test success + failure cases
 - Include edge cases
 `,
-      },
-      {
-        role: "user",
-        content,
-      },
-    ],
-    temperature: 0.2,
-    max_tokens: 4000,
-  });
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 3000,
+    });
 
-  const res = await fetch(GROQ_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-    },
-    body,
-  });
+    const res = await fetch(GROQ_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${GROQ_API_KEY}`,
+      },
+      body,
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text);
+    if (!res.ok) {
+      const text = await res.text();
+
+      if (text.includes("rate_limit_exceeded") && retries > 0) {
+        log("Groq rate limit hit — retrying in 7s...");
+        await new Promise((r) => setTimeout(r, 7000));
+        return callGroq(prompt, retries - 1);
+      }
+
+      throw new Error(text);
+    }
+
+    const data = await res.json();
+
+    return data.choices[0].message.content.trim();
+  } catch (err) {
+    if (retries > 0) {
+      log("Retrying after error...");
+      await new Promise((r) => setTimeout(r, 5000));
+      return callGroq(prompt, retries - 1);
+    }
+
+    throw err;
   }
-
-  const data = await res.json();
-
-  return data.choices[0].message.content.trim();
 }
 
 function extractCode(raw) {
   const match = raw.match(/```(?:java)?\s*([\s\S]*?)```/);
-
   return match ? match[1].trim() : raw;
 }
+
+/* ---------------------------------------------------- */
+/* Generate test */
+/* ---------------------------------------------------- */
 
 async function generateTest(file) {
   const full = path.join(REPO_ROOT, file);
@@ -170,13 +212,14 @@ async function generateTest(file) {
     return null;
   }
 
-  const prompt = `Generate JUnit5 test class for this file.
+  const prompt = `
+Generate JUnit5 test class for the following Java file.
 
-File path:
+File:
 ${file}
 
 Code:
-${content.slice(0, 4000)}
+${content.slice(0, 2500)}
 `;
 
   const raw = await callGroq(prompt);
@@ -191,6 +234,10 @@ ${content.slice(0, 4000)}
 
   return testPath;
 }
+
+/* ---------------------------------------------------- */
+/* Git commit */
+/* ---------------------------------------------------- */
 
 function gitPush(files) {
   if (files.length === 0) return;
@@ -208,19 +255,28 @@ function gitPush(files) {
     execSync(`git add ${f}`, { cwd: REPO_ROOT });
   });
 
-  execSync(
-    'git commit -m "🤖 TestCraft AI generated tests"',
-    { cwd: REPO_ROOT }
-  );
+  execSync('git commit -m "🤖 TestCraft AI generated tests"', {
+    cwd: REPO_ROOT,
+  });
 
   execSync(`git push origin ${PR_HEAD_REF}`, {
     cwd: REPO_ROOT,
   });
 }
 
+/* ---------------------------------------------------- */
+/* Main */
+/* ---------------------------------------------------- */
+
 async function main() {
   if (!GROQ_API_KEY) {
     log("Missing GROQ_API_KEY");
+
+    fs.writeFileSync(
+      RESULT_PATH,
+      JSON.stringify({ success: false, error: "Missing GROQ_API_KEY" })
+    );
+
     process.exit(1);
   }
 
@@ -231,6 +287,7 @@ async function main() {
   log(`Java files changed: ${javaFiles.length}`);
 
   const created = [];
+  const details = {};
 
   for (let i = 0; i < javaFiles.length; i += BATCH_SIZE) {
     const batch = javaFiles.slice(i, i + BATCH_SIZE);
@@ -241,16 +298,33 @@ async function main() {
       try {
         const result = await generateTest(file);
 
-        if (result) created.push(result);
+        if (result) {
+          created.push(result);
+          details[file] = result;
+        }
       } catch (err) {
         log(`Error for ${file}: ${err.message}`);
+        details[file] = `ERROR: ${err.message}`;
       }
     }
 
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, DELAY_BETWEEN_BATCH));
   }
 
   gitPush(created);
+
+  fs.writeFileSync(
+    RESULT_PATH,
+    JSON.stringify(
+      {
+        success: true,
+        filesCreated: created.length,
+        details,
+      },
+      null,
+      2
+    )
+  );
 
   log(`Generated ${created.length} tests`);
 }
