@@ -1,22 +1,24 @@
-# TestCraft AI — Generate JUnit tests on /generate-tests comment
-# Stack: Java + JUnit 5 + Maven + Groq API
-# Add GROQ_API_KEY in repo Settings → Secrets → Actions
-
 name: 🤖 TestCraft AI — Generate Tests
 
 on:
   issue_comment:
     types: [created]
 
+concurrency:
+  group: testcraft-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
 jobs:
   generate-tests:
     if: github.event.issue.pull_request != null && contains(github.event.comment.body, '/generate-tests')
     runs-on: ubuntu-latest
+
     permissions:
       contents: write
       pull-requests: write
 
     steps:
+
       - name: Get PR head ref
         id: pr
         uses: actions/github-script@v7
@@ -41,7 +43,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.x'
+
+      - name: Install dependencies
+        working-directory: .github/scripts
+        run: npm install node-fetch
 
       - name: Run TestCraft — generate tests
         env:
@@ -64,16 +70,44 @@ jobs:
             const fs = require('fs');
             const resultPath = process.env.GITHUB_WORKSPACE + '/.github/scripts/result.json';
             let body = '🤖 **TestCraft AI** — ';
+
             if (process.env.GROQ_API_KEY === '' || !process.env.GROQ_API_KEY) {
               body += '⚠️ `GROQ_API_KEY` is not set. Add it in repo Settings → Secrets → Actions.';
-            } else if (fs.existsSync(resultPath)) {
+            } 
+            else if (fs.existsSync(resultPath)) {
+
               const r = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-              body += r.success
-                ? `✅ Generated/updated **${r.filesCreated || 0}** test file(s).`
-                : `❌ ${r.error || 'Generation failed.'}`;
+
+              if (r.success) {
+
+                body += `✅ Generated **${r.filesCreated || 0}** test file(s).\n\n`;
+
+                if (r.details) {
+
+                  body += '| Source File | Test File |\n|---|---|\n';
+
+                  for (const [src, test] of Object.entries(r.details)) {
+
+                    const srcShort = src.replace('src/main/java/', '');
+
+                    const status = test.startsWith('ERROR')
+                      ? `❌ ${test}`
+                      : `✅ \`${test.replace('src/test/java/', '')}\``;
+
+                    body += `| \`${srcShort}\` | ${status} |\n`;
+                  }
+                }
+
+              } else {
+
+                body += `❌ ${r.error || 'Generation failed.'}`;
+              }
+
             } else {
+
               body += '❌ Check the Actions logs for details.';
             }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
