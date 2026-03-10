@@ -28,6 +28,10 @@ const BATCH_SIZE = 3;
 const RESULT_PATH = path.join(__dirname, 'result.json');
 const SRC_MAIN = 'src/main/java';
 
+const MAX_RETRIES = 400;
+const INITIAL_BACKOFF_MS = 5000;
+const DELAY_BETWEEN_CALLS_MS = 4000;
+
 /* ------------------------------------------------------------------ */
 /*  Logging / result                                                   */
 /* ------------------------------------------------------------------ */
@@ -38,6 +42,10 @@ function log(msg) {
 
 function writeResult(success, data = {}) {
   fs.writeFileSync(RESULT_PATH, JSON.stringify({ success, ...data }, null, 2));
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /* ------------------------------------------------------------------ */
@@ -258,7 +266,7 @@ function buildUserPrompt(mainPath, content, fileType, dependencies) {
 /* ------------------------------------------------------------------ */
 
 async function callGroq(systemMsg, userContent) {
-  const body = JSON.stringify({
+  const payload = JSON.stringify({
     model: GROQ_MODEL,
     messages: [
       { role: 'system', content: systemMsg },
@@ -268,26 +276,47 @@ async function callGroq(systemMsg, userContent) {
     max_tokens: 6144
   });
 
-  const res = await fetch(GROQ_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${GROQ_API_KEY}`
-    },
-    body
-  });
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    const res = await fetch(GROQ_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${GROQ_API_KEY}`
+      },
+      body: payload
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Groq API ${res.status}: ${text.slice(0, 500)}`);
+    if (res.status === 429) {
+      const retryAfter = res.headers.get('retry-after');
+      const waitMs = retryAfter
+        ? parseInt(retryAfter, 10) * 1000
+        : INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1);
+      log(`  ⏳ Rate limited (429). Retry ${attempt}/${MAX_RETRIES} after ${waitMs}ms...`);
+      await sleep(waitMs);
+      continue;
+    }
+
+    if (res.status >= 500 && attempt < MAX_RETRIES) {
+      const waitMs = INITIAL_BACKOFF_MS * Math.pow(2, attempt - 1);
+      log(`  ⚠️ Server error (${res.status}). Retry ${attempt}/${MAX_RETRIES} after ${waitMs}ms...`);
+      await sleep(waitMs);
+      continue;
+    }
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Groq API ${res.status}: ${text.slice(0, 500)}`);
+    }
+
+    const data = await res.json();
+    const choice = data.choices && data.choices[0];
+    if (!choice || !choice.message || !choice.message.content) {
+      throw new Error('Empty response from Groq');
+    }
+    return choice.message.content.trim();
   }
 
-  const data = await res.json();
-  const choice = data.choices && data.choices[0];
-  if (!choice || !choice.message || !choice.message.content) {
-    throw new Error('Empty response from Groq');
-  }
-  return choice.message.content.trim();
+  throw new Error('Groq API: max retries exceeded (rate limited)');
 }
 
 function extractJavaCode(raw) {
@@ -396,7 +425,8 @@ async function main() {
       const batchNum = Math.floor(i / BATCH_SIZE) + 1;
       log(`\n── Batch ${batchNum} (${batch.length} file(s)) ──`);
 
-      for (const file of batch) {
+      for (let j = 0; j < batch.length; j++) {
+        const file = batch[j];
         try {
           const testFile = await generateTestForFile(file);
           if (testFile) {
@@ -406,6 +436,11 @@ async function main() {
         } catch (err) {
           log(`Error processing ${file}: ${err.message}`);
           summary[file] = `ERROR: ${err.message}`;
+        }
+        const isLastFile = (i + j + 1) >= toProcess.length;
+        if (!isLastFile) {
+          log(`  💤 Waiting ${DELAY_BETWEEN_CALLS_MS}ms before next file (rate-limit safety)...`);
+          await sleep(DELAY_BETWEEN_CALLS_MS);
         }
       }
     }
