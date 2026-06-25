@@ -62,9 +62,10 @@ jobs:
       - name: Generate + self-correct tests
         id: gen
         env:
-          TESTCRAFT_PROVIDER: ${{ vars.TESTCRAFT_PROVIDER || 'anthropic' }}
-          TESTCRAFT_MODEL: ${{ vars.TESTCRAFT_MODEL }}
-          TESTCRAFT_BASE_URL: ${{ vars.TESTCRAFT_BASE_URL }}
+          # Accept config from either Variables or Secrets, so it works wherever you set it.
+          TESTCRAFT_PROVIDER: ${{ vars.TESTCRAFT_PROVIDER || secrets.TESTCRAFT_PROVIDER || 'anthropic' }}
+          TESTCRAFT_MODEL: ${{ vars.TESTCRAFT_MODEL || secrets.TESTCRAFT_MODEL }}
+          TESTCRAFT_BASE_URL: ${{ vars.TESTCRAFT_BASE_URL || secrets.TESTCRAFT_BASE_URL }}
           TESTCRAFT_API_KEY: ${{ secrets.TESTCRAFT_API_KEY }}
           BASE_REF: ${{ steps.pr.outputs.base_ref }}
         run: |
