@@ -1,0 +1,366 @@
+```java
+package com.testcraft.demo.service;
+
+import com.testcraft.demo.model.ChessBoard;
+import com.testcraft.demo.model.ChessPiece;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class ChessEvaluatorTest {
+
+    @Mock
+    private ChessBoard board;
+
+    @InjectMocks
+    private ChessEvaluator evaluator;
+
+    @Test
+    @DisplayName("Evaluate board with pawns")
+    void testEvaluatePawns() {
+        ChessPiece[][] squares = new ChessPiece[8][8];
+        squares[0][0] = ChessPiece.WHITE_PAWN;
+        squares[0][1] = ChessPiece.WHITE_PAWN;
+        squares[0][2] = ChessPiece.WHITE_PAWN;
+        squares[0][3] = ChessPiece.WHITE_PAWN;
+        squares[0][4] = ChessPiece.WHITE_PAWN;
+        squares[0][5] = ChessPiece.WHITE_PAWN;
+        squares[0][6] = ChessPiece.WHITE_PAWN;
+        squares[0][7] = ChessPiece.WHITE_PAWN;
+        when(board.getPiece(0, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(0, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(1, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(2, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(3, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(4, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(5, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(6, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 0)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 1)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 2)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 3)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 4)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 5)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 6)).thenReturn(ChessPiece.WHITE_PAWN);
+        when(board.getPiece(7, 7)).thenReturn(ChessPiece.WHITE_PAWN);
+        int score = evaluator.evaluate(board);
+        assertThat(score).isEqualTo(800);
+    }
+
+    @Test
+    @DisplayName("Evaluate board with knights")
+    void testEvaluateKnights() {
+        ChessPiece[][] squares = new ChessPiece[8][8];
+        squares[0][0] = ChessPiece.WHITE_KNIGHT;
+        squares[0][1] = ChessPiece.WHITE_KNIGHT;
+        squares[0][2] = ChessPiece.WHITE_KNIGHT;
+        squares[0][3] = ChessPiece.WHITE_KNIGHT;
+        squares[0][4] = ChessPiece.WHITE_KNIGHT;
+        squares[0][5] = ChessPiece.WHITE_KNIGHT;
+        squares[0][6] = ChessPiece.WHITE_KNIGHT;
+        squares[0][7] = ChessPiece.WHITE_KNIGHT;
+        when(board.getPiece(0, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(0, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(1, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(2, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(3, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(4, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(5, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(6, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 0)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 1)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 2)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 3)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 4)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 5)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 6)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        when(board.getPiece(7, 7)).thenReturn(ChessPiece.WHITE_KNIGHT);
+        int score = evaluator.evaluate(board);
+        assertThat(score).isEqualTo(-320);
+    }
+
+    @Test
+    @DisplayName("Evaluate board with bishops")
+    void testEvaluateBishops() {
+        ChessPiece[][] squares = new ChessPiece[8][8];
+        squares[0][0] = ChessPiece.WHITE_BISHOP;
+        squares[0][1] = ChessPiece.WHITE_BISHOP;
+        squares[0][2] = ChessPiece.WHITE_BISHOP;
+        squares[0][3] = ChessPiece.WHITE_BISHOP;
+        squares[0][4] = ChessPiece.WHITE_BISHOP;
+        squares[0][5] = ChessPiece.WHITE_BISHOP;
+        squares[0][6] = ChessPiece.WHITE_BISHOP;
+        squares[0][7] = ChessPiece.WHITE_BISHOP;
+        when(board.getPiece(0, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(0, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(1, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(2, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(3, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(4, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(5, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(6, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 0)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 1)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 2)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 3)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 4)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 5)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 6)).thenReturn(ChessPiece.WHITE_BISHOP);
+        when(board.getPiece(7, 7)).thenReturn(ChessPiece.WHITE_BISHOP);
+        int score = evaluator.evaluate(board);
+        assertThat(score).isEqualTo(-330);
+    }
+
+    @Test
+    @DisplayName("Evaluate board with rooks")
+    void testEvaluateRooks() {
+        ChessPiece[][] squares = new ChessPiece[8][8];
+        squares[0][0] = ChessPiece.WHITE_ROOK;
+        squares[0][1] = ChessPiece.WHITE_ROOK;
+        squares[0][2] = ChessPiece.WHITE_ROOK;
+        squares[0][3] = ChessPiece.WHITE_ROOK;
+        squares[0][4] = ChessPiece.WHITE_ROOK;
+        squares[0][5] = ChessPiece.WHITE_ROOK;
+        squares[0][6] = ChessPiece.WHITE_ROOK;
+        squares[0][7] = ChessPiece.WHITE_ROOK;
+        when(board.getPiece(0, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(0, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(1, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(2, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(3, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(4, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(5, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(6, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 0)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 1)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 2)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 3)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 4)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 5)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 6)).thenReturn(ChessPiece.WHITE_ROOK);
+        when(board.getPiece(7, 7)).thenReturn(ChessPiece.WHITE_ROOK);
+        int score = evaluator.evaluate(board);
+        assertThat(score).isEqualTo(500);
+    }
+
+    @Test
+    @DisplayName("Evaluate board with queens")
+    void testEvaluateQueens() {
+        ChessPiece[][] squares = new ChessPiece[8][8];
+        squares[0][0] = ChessPiece.WHITE_QUEEN;
+        squares[0][1] = ChessPiece.WHITE_QUEEN;
+        squares[0][2] = ChessPiece.WHITE_QUEEN;
+        squares[0][3] = ChessPiece.WHITE_QUEEN;
+        squares[0][4] = ChessPiece.WHITE_QUEEN;
+        squares[0][5] = ChessPiece.WHITE_QUEEN;
+        squares[0][6] = ChessPiece.WHITE_QUEEN;
+        squares[0][7] = ChessPiece.WHITE_QUEEN;
+        when(board.getPiece(0, 0)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 1)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 2)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 3)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 4)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 5)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 6)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(0, 7)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(1, 0)).thenReturn(ChessPiece.WHITE_QUEEN);
+        when(board.getPiece(1, 1)).thenReturn(ChessPiece

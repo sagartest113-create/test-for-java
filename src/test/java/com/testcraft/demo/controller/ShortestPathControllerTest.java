@@ -1,116 +1,133 @@
 package com.testcraft.demo.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testcraft.demo.config.SecurityConfig;
 import com.testcraft.demo.dto.GridRequest;
 import com.testcraft.demo.dto.ShortestPathResponse;
 import com.testcraft.demo.model.PathComputation;
 import com.testcraft.demo.service.ShortestPathService;
-import jakarta.validation.Valid;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@WithMockUser
 public class ShortestPathControllerTest {
 
-    @Mock
-    private ShortestPathService shortestPathService;
+    @Autowired
+    private WebApplicationContext context;
 
-    @InjectMocks
-    private ShortestPathController shortestPathController;
-
+    @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private ShortestPathService shortestPathService;
 
     @BeforeEach
     public void setup() {
-        mockMvc = MockMvcBuilders.standaloneSetup(shortestPathController).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
     }
 
     @Test
-    public void testComputeShortestPath() throws Exception {
-        PathComputation computation = new PathComputation();
-        computation.setId(1L);
-        computation.setPath("path");
-        computation.setTotalCost(10.0);
-        computation.setReachable(true);
+    @DisplayName("Compute shortest path with valid grid")
+    public void computeShortestPath_ValidGrid() throws Exception {
+        GridRequest request = new GridRequest(
+                new int[][]{
+                        {1, 2, 3, 4, 5, 6, 7, 8, 9},
+                        {10, 11, 12, 13, 14, 15, 16, 17, 18},
+                        {19, 20, 21, 22, 23, 24, 25, 26, 27},
+                        {28, 29, 30, 31, 32, 33, 34, 35, 36},
+                        {37, 38, 39, 40, 41, 42, 43, 44, 45},
+                        {46, 47, 48, 49, 50, 51, 52, 53, 54},
+                        {55, 56, 57, 58, 59, 60, 61, 62, 63},
+                        {64, 65, 66, 67, 68, 69, 70, 71, 72},
+                        {73, 74, 75, 76, 77, 78, 79, 80, 81}
+                }
+        );
 
-        when(shortestPathService.computeShortestPath(any(GridRequest.class))).thenReturn(computation);
-
-        GridRequest request = new GridRequest();
-        request.setGrid("grid");
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/shortest-path")
+        mockMvc.perform(post("/api/shortest-path")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(asJsonString(request)))
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.path").exists())
+                .andExpect(jsonPath("$.totalCost").exists())
+                .andExpect(jsonPath("$.reachable").exists());
+    }
+
+    @Test
+    @DisplayName("Compute shortest path with invalid grid")
+    public void computeShortestPath_InvalidGrid() throws Exception {
+        GridRequest request = new GridRequest(
+                new int[][]{
+                        {1, 2, 3, 4, 5, 6, 7, 8},
+                        {10, 11, 12, 13, 14, 15, 16, 17, 18},
+                        {19, 20, 21, 22, 23, 24, 25, 26, 27},
+                        {28, 29, 30, 31, 32, 33, 34, 35, 36},
+                        {37, 38, 39, 40, 41, 42, 43, 44, 45},
+                        {46, 47, 48, 49, 50, 51, 52, 53, 54},
+                        {55, 56, 57, 58, 59, 60, 61, 62, 63},
+                        {64, 65, 66, 67, 68, 69, 70, 71, 72},
+                        {73, 74, 75, 76, 77, 78, 79, 80}
+                }
+        );
+
+        mockMvc.perform(post("/api/shortest-path")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Get computation by id")
+    public void getComputation_ValidId() throws Exception {
+        PathComputation computation = new PathComputation(1L, new int[][]{
+                {1, 2, 3, 4, 5, 6, 7, 8, 9},
+                {10, 11, 12, 13, 14, 15, 16, 17, 18},
+                {19, 20, 21, 22, 23, 24, 25, 26, 27},
+                {28, 29, 30, 31, 32, 33, 34, 35, 36},
+                {37, 38, 39, 40, 41, 42, 43, 44, 45},
+                {46, 47, 48, 49, 50, 51, 52, 53, 54},
+                {55, 56, 57, 58, 59, 60, 61, 62, 63},
+                {64, 65, 66, 67, 68, 69, 70, 71, 72},
+                {73, 74, 75, 76, 77, 78, 79, 80, 81}
+        }, new List<>(), 0, true);
+
+        mockMvc.perform(get("/api/shortest-path/1"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.path").value("path"))
-                .andExpect(jsonPath("$.totalCost").value(10.0))
+                .andExpect(jsonPath("$.path").exists())
+                .andExpect(jsonPath("$.totalCost").value(0))
                 .andExpect(jsonPath("$.reachable").value(true));
     }
 
     @Test
-    public void testGetComputation() throws Exception {
-        PathComputation computation = new PathComputation();
-        computation.setId(1L);
-        computation.setPath("path");
-        computation.setTotalCost(10.0);
-        computation.setReachable(true);
-
-        when(shortestPathService.getComputation(1L)).thenReturn(computation);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/shortest-path/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.path").value("path"))
-                .andExpect(jsonPath("$.totalCost").value(10.0))
-                .andExpect(jsonPath("$.reachable").value(true));
+    @DisplayName("Get computation by id not found")
+    public void getComputation_NotFound() throws Exception {
+        mockMvc.perform(get("/api/shortest-path/1"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
-    public void testGetAllComputations() throws Exception {
-        PathComputation computation1 = new PathComputation();
-        computation1.setId(1L);
-        computation1.setPath("path1");
-        computation1.setTotalCost(10.0);
-        computation1.setReachable(true);
-
-        PathComputation computation2 = new PathComputation();
-        computation2.setId(2L);
-        computation2.setPath("path2");
-        computation2.setTotalCost(20.0);
-        computation2.setReachable(true);
-
-        when(shortestPathService.getAllComputations()).thenReturn(List.of(computation1, computation2));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/shortest-path"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].path").value("path1"))
-                .andExpect(jsonPath("$[0].totalCost").value(10.0))
-                .andExpect(jsonPath("$[0].reachable").value(true))
-                .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].path").value("path2"))
-                .andExpect(jsonPath("$[1].totalCost").value(20.0))
-                .andExpect(jsonPath("$[1].reachable").value(true));
-    }
-
-    private String asJsonString(Object obj) {
-        try {
-            return new ObjectMapper().writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+    @DisplayName("Get all computations")
+    public void getAllComputations() throws Exception {
+        mockMvc.perform(get("/api/shortest-path"))
+                .andExpect(status().isOk());
     }
 }

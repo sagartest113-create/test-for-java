@@ -29,3 +29,6 @@ spring-boot-devtools.properties
 # OS
 .DS_Store
 Thumbs.db
+
+# TestCraft local run artifact
+testcraft-result.json

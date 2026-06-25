@@ -75,10 +75,6 @@ public class ChessEvaluator {
             { 20, 30, 10,  0,  0, 10, 30, 20}
     };
 
-    /**
-     * Evaluates the board from white's perspective.
-     * Positive = white advantage, negative = black advantage.
-     */
     public int evaluate(ChessBoard board) {
         int score = 0;
         for (int r = 0; r < 8; r++) {

@@ -1,61 +1,85 @@
 package com.testcraft.demo.dto;
 
-import com.testcraft.demo.service.ChessBoardService;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@ExtendWith({MockitoExtension.class, SpringExtension.class})
 public class ChessBoardRequestTest {
 
-    @Mock
-    private ChessBoardService chessBoardService;
-
-    @InjectMocks
-    private ChessBoardService chessBoardServiceMock;
+    private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     @Test
-    void testValidRequest() {
-        // Arrange
+    @DisplayName("Constructs ChessBoardRequest with valid board")
+    void constructsWithValidBoard() {
         String[][] board = new String[8][8];
-        when(chessBoardServiceMock.validateBoard(board)).thenReturn(true);
-
-        // Act
-        // No need to call the service method here as it's not a REST controller test
-
-        // Assert
-        // No need to assert anything here as the service method is not being called
+        ChessBoardRequest request = new ChessBoardRequest(board);
+        assertThat(request.board()).isEqualTo(board);
     }
 
     @Test
-    void testInvalidRequestNullBoard() {
-        // Arrange
-        String[][] board = null;
-
-        // Act
-        // No need to call the service method here as it's not a REST controller test
-
-        // Assert
-        assertThrows(NullPointerException.class, () -> chessBoardServiceMock.validateBoard(board));
+    @DisplayName("Constructs ChessBoardRequest with null board throws NPE")
+    void constructsWithNullBoardThrowsNPE() {
+        assertThatThrownBy(() -> new ChessBoardRequest(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Board must not be null");
     }
 
     @Test
-    void testInvalidRequestBoardSize() {
-        // Arrange
+    @DisplayName("Constructs ChessBoardRequest with board of size 7 throws ConstraintViolation")
+    void constructsWithBoardOfSize7ThrowsConstraintViolation() {
         String[][] board = new String[7][8];
+        assertThatThrownBy(() -> new ChessBoardRequest(board))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("Board must have exactly 8 rows");
+    }
 
-        // Act
-        // No need to call the service method here as it's not a REST controller test
+    @Test
+    @DisplayName("Constructs ChessBoardRequest with board of size 9 throws ConstraintViolation")
+    void constructsWithBoardOfSize9ThrowsConstraintViolation() {
+        String[][] board = new String[9][8];
+        assertThatThrownBy(() -> new ChessBoardRequest(board))
+                .isInstanceOf(ConstraintViolationException.class)
+                .hasMessageContaining("Board must have exactly 8 rows");
+    }
 
-        // Assert
-        assertThrows(IllegalArgumentException.class, () -> chessBoardServiceMock.validateBoard(board));
+    @Test
+    @DisplayName("Validates ChessBoardRequest with valid board")
+    void validatesWithValidBoard() {
+        String[][] board = new String[8][8];
+        ChessBoardRequest request = new ChessBoardRequest(board);
+        ConstraintViolation<?>[] violations = validator.validate(request).toArray();
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Validates ChessBoardRequest with null board")
+    void validatesWithNullBoard() {
+        ChessBoardRequest request = new ChessBoardRequest(null);
+        ConstraintViolation<?>[] violations = validator.validate(request).toArray();
+        assertThat(violations).hasSize(1);
+        assertThat(violations[0].getMessage()).isEqualTo("Board must not be null");
+    }
+
+    @Test
+    @DisplayName("Validates ChessBoardRequest with board of size 7")
+    void validatesWithBoardOfSize7() {
+        String[][] board = new String[7][8];
+        ChessBoardRequest request = new ChessBoardRequest(board);
+        ConstraintViolation<?>[] violations = validator.validate(request).toArray();
+        assertThat(violations).hasSize(1);
+        assertThat(violations[0].getMessage()).isEqualTo("Board must have exactly 8 rows");
+    }
+
+    @Test
+    @DisplayName("Validates ChessBoardRequest with board of size 9")
+    void validatesWithBoardOfSize9() {
+        String[][] board = new String[9][8];
+        ChessBoardRequest request = new ChessBoardRequest(board);
+        ConstraintViolation<?>[] violations = validator.validate(request).toArray();
+        assertThat(violations).hasSize(1);
+        assertThat(violations[0].getMessage()).isEqualTo("Board must have exactly 8 rows");
     }
 }

@@ -60,7 +60,7 @@ public class ChessMoveGenerator {
                 generateSlidingMoves(board, row, col, piece, DIAGONAL, moves);
             }
             case WHITE_KING, BLACK_KING -> generateKingMoves(board, row, col, piece, moves);
-            default -> { /* EMPTY — nothing to generate */ }
+            default -> { /* EMPTY */ }
         }
     }
 
