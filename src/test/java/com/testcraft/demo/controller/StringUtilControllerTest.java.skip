@@ -1,0 +1,187 @@
+package com.testcraft.demo.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testcraft.demo.dto.PrefixRequest;
+import com.testcraft.demo.service.StringUtilService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@AutoConfigureMockMvc
+@SpringBootTest
+public class StringUtilControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setup() {
+        // Setup mock service to return expected results for each test method
+        // This is a placeholder, you should implement the actual logic here
+    }
+
+    @Nested
+    @DisplayName("Palindrome endpoint")
+    class PalindromeEndpoint {
+
+        @Test
+        @DisplayName("Happy path: input is a palindrome")
+        void testIsPalindrome_HappyPath() throws Exception {
+            mockMvc.perform(get("/api/strings/palindrome?input=racecar"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.palindrome").value(true));
+        }
+
+        @Test
+        @DisplayName("Negative case: input is not a palindrome")
+        void testIsPalindrome_NegativeCase() throws Exception {
+            mockMvc.perform(get("/api/strings/palindrome?input=hello"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.palindrome").value(false));
+        }
+
+        @Test
+        @DisplayName("Edge case: input is null")
+        void testIsPalindrome_NullInput() throws Exception {
+            mockMvc.perform(get("/api/strings/palindrome?input="))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("Reverse words endpoint")
+    class ReverseWordsEndpoint {
+
+        @Test
+        @DisplayName("Happy path: input has multiple words")
+        void testReverseWords_HappyPath() throws Exception {
+            mockMvc.perform(get("/api/strings/reverse-words?sentence=Hello+World!"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.reversed").value("World! Hello"));
+        }
+
+        @Test
+        @DisplayName("Negative case: input has no words")
+        void testReverseWords_NegativeCase() throws Exception {
+            mockMvc.perform(get("/api/strings/reverse-words?sentence="))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.reversed").value(""));
+        }
+
+        @Test
+        @DisplayName("Edge case: input is null")
+        void testReverseWords_NullInput() throws Exception {
+            mockMvc.perform(get("/api/strings/reverse-words?sentence="))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("Character frequency endpoint")
+    class CharFrequencyEndpoint {
+
+        @Test
+        @DisplayName("Happy path: input has multiple characters")
+        void testCharFrequency_HappyPath() throws Exception {
+            mockMvc.perform(get("/api/strings/char-frequency?input=abcde"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.frequency").value(hasSize(5)));
+        }
+
+        @Test
+        @DisplayName("Negative case: input has no characters")
+        void testCharFrequency_NegativeCase() throws Exception {
+            mockMvc.perform(get("/api/strings/char-frequency?input="))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.frequency").value(hasSize(0)));
+        }
+
+        @Test
+        @DisplayName("Edge case: input is null")
+        void testCharFrequency_NullInput() throws Exception {
+            mockMvc.perform(get("/api/strings/char-frequency?input="))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("Longest common prefix endpoint")
+    class LongestCommonPrefixEndpoint {
+
+        @Test
+        @DisplayName("Happy path: input has multiple words with a common prefix")
+        void testLongestCommonPrefix_HappyPath() throws Exception {
+            mockMvc.perform(post("/api/strings/longest-common-prefix")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(new PrefixRequest(List.of("flower", "flow", "flight")))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.prefix").value("fl"));
+        }
+
+        @Test
+        @DisplayName("Negative case: input has no common prefix")
+        void testLongestCommonPrefix_NegativeCase() throws Exception {
+            mockMvc.perform(post("/api/strings/longest-common-prefix")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(new PrefixRequest(List.of("flower", "flow", "flying")))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.prefix").value(""));
+        }
+
+        @Test
+        @DisplayName("Edge case: input is null")
+        void testLongestCommonPrefix_NullInput() throws Exception {
+            mockMvc.perform(post("/api/strings/longest-common-prefix")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(new PrefixRequest(List.of()))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.prefix").value(""));
+        }
+    }
+
+    @Nested
+    @DisplayName("Camel to snake endpoint")
+    class CamelToSnakeEndpoint {
+
+        @Test
+        @DisplayName("Happy path: input is a valid camel case string")
+        void testCamelToSnake_HappyPath() throws Exception {
+            mockMvc.perform(get("/api/strings/camel-to-snake?input=myVariableName"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.snake_case").value("my_variable_name"));
+        }
+
+        @Test
+        @DisplayName("Negative case: input is not a valid camel case string")
+        void testCamelToSnake_NegativeCase() throws Exception {
+            mockMvc.perform(get("/api/strings/camel-to-snake?input=hello world"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.snake_case").value(""));
+        }
+
+        @Test
+        @DisplayName("Edge case: input is null")
+        void testCamelToSnake_NullInput() throws Exception {
+            mockMvc.perform(get("/api/strings/camel-to-snake?input="))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+}

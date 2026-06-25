@@ -1,0 +1,132 @@
+package com.testcraft.demo.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.testcraft.demo.dto.FizzBuzzResponse;
+import com.testcraft.demo.service.MathService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class MathControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @MockBean
+    private MathService mathService;
+
+    @BeforeEach
+    public void setup() {
+        // Set up mock service to return valid results for happy path tests
+        mathService.factorial(5);
+        mathService.isPrime(7);
+        mathService.fizzBuzz(10);
+        mathService.fibonacci(5);
+        mathService.gcd(12, 15);
+    }
+
+    @Test
+    @DisplayName("GET /api/math/factorial/{n} returns n! for valid input")
+    public void testFactorialHappyPath() throws Exception {
+        mockMvc.perform(get("/api/math/factorial/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.factorial").value(120));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/factorial/{n} returns 400 for invalid input")
+    public void testFactorialInvalidInput() throws Exception {
+        mockMvc.perform(get("/api/math/factorial/-5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Input must be non-negative, got: -5"));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/prime/{n} returns true for prime input")
+    public void testIsPrimeHappyPath() throws Exception {
+        mockMvc.perform(get("/api/math/prime/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.prime").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/prime/{n} returns false for non-prime input")
+    public void testIsPrimeNonPrimeInput() throws Exception {
+        mockMvc.perform(get("/api/math/prime/6"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.prime").value(false));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/fizzbuzz/{n} returns FizzBuzz list for valid input")
+    public void testFizzBuzzHappyPath() throws Exception {
+        mockMvc.perform(get("/api/math/fizzbuzz/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.result", hasSize(10)));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/fibonacci/{n} returns nth Fibonacci number for valid input")
+    public void testFibonacciHappyPath() throws Exception {
+        mockMvc.perform(get("/api/math/fibonacci/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.fibonacci").value(5));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/gcd?a={a}&b={b} returns gcd(a, b) for valid input")
+    public void testGCDHappyPath() throws Exception {
+        mockMvc.perform(get("/api/math/gcd?a=12&b=15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.gcd").value(3));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/factorial/{n} returns 400 for overflow-prone input")
+    public void testFactorialOverflow() throws Exception {
+        mockMvc.perform(get("/api/math/factorial/21"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Input must be <= 20 to avoid overflow, got: 21"));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/fibonacci/{n} returns 400 for overflow-prone input")
+    public void testFibonacciOverflow() throws Exception {
+        mockMvc.perform(get("/api/math/fibonacci/86"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("n must be <= 85 to avoid overflow, got: 86"));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/gcd?a={a}&b={b} returns 400 for invalid input")
+    public void testGCDInvalidInput() throws Exception {
+        mockMvc.perform(get("/api/math/gcd?a=-12&b=15"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Inputs must be non-negative"));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/fizzbuzz/{n} returns 400 for invalid input")
+    public void testFizzBuzzInvalidInput() throws Exception {
+        mockMvc.perform(get("/api/math/fizzbuzz/-10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("n must be >= 1, got: -10"));
+    }
+}

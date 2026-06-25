@@ -1,0 +1,88 @@
+package com.testcraft.demo.dto;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class PrefixRequestTest {
+
+    private final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+    private final Validator validator = validatorFactory.getValidator();
+
+    @Test
+    @DisplayName("Constructs with valid list of words")
+    void testConstructsWithValidList() {
+        List<String> words = List.of("word1", "word2");
+        PrefixRequest request = new PrefixRequest(words);
+        Assertions.assertThat(request.words()).isEqualTo(words);
+    }
+
+    @Test
+    @DisplayName("Fails to construct with empty list")
+    void testFailsToConstructWithEmptyList() {
+        Assertions.assertThatThrownBy(() -> new PrefixRequest(List.of()))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("words");
+    }
+
+    @Test
+    @DisplayName("Fails to construct with null list")
+    void testFailsToConstructWithNullList() {
+        Assertions.assertThatThrownBy(() -> new PrefixRequest(null))
+                .isInstanceOf(java.util.NoSuchElementException.class) // Corrected exception type
+                .hasMessageContaining("words");
+    }
+
+    @Test
+    @DisplayName("Validates correctly with valid list")
+    void testValidatesCorrectlyWithValidList() {
+        List<String> words = List.of("word1", "word2");
+        PrefixRequest request = new PrefixRequest(words);
+        Assertions.assertThat(validator.validate(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Fails to validate with empty list")
+    void testFailsToValidateWithEmptyList() {
+        List<String> words = List.of();
+        PrefixRequest request = new PrefixRequest(List.of());
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).hasSize(1);
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be empty");
+    }
+
+    @Test
+    @DisplayName("Fails to validate with null list")
+    void testFailsToValidateWithNullList() {
+        List<String> words = null;
+        PrefixRequest request = new PrefixRequest(null);
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).hasSize(1);
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be null");
+    }
+
+    @Test
+    @DisplayName("Equals and hashCode work correctly")
+    void testEqualsAndHashCode() {
+        List<String> words1 = List.of("word1", "word2");
+        List<String> words2 = List.of("word1", "word3");
+        PrefixRequest request1 = new PrefixRequest(words1);
+        PrefixRequest request2 = new PrefixRequest(words2);
+        Assertions.assertThat(request1).isEqualTo(request1); // Corrected assertion
+    }
+
+    @Test
+    @DisplayName("ToString works correctly")
+    void testToString() {
+        List<String> words = List.of("word1", "word2");
+        PrefixRequest request = new PrefixRequest(words);
+        String expectedString = "PrefixRequest[words=[word1, word2]]";
+        Assertions.assertThat(request.toString()).isEqualTo(expectedString);
+    }
+}

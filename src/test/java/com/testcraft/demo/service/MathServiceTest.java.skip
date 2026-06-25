@@ -1,0 +1,124 @@
+package com.testcraft.demo.service;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class MathServiceTest {
+
+    @Mock
+    private List<String> listMock;
+
+    @InjectMocks
+    private MathService underTest = new MathService();
+
+    @Test
+    @DisplayName("factorial: happy path")
+    void testFactorial_HappyPath() {
+        long result = underTest.factorial(5);
+        assertThat(result).isEqualTo(120L);
+    }
+
+    @Test
+    @DisplayName("factorial: negative input")
+    void testFactorial_NegativeInput() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.factorial(-1));
+    }
+
+    @Test
+    @DisplayName("factorial: overflow-prone input")
+    void testFactorial_OverflowProneInput() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.factorial(21));
+    }
+
+    @Test
+    @DisplayName("isPrime: happy path")
+    void testIsPrime_HappyPath() {
+        boolean result = underTest.isPrime(23);
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("isPrime: negative input")
+    void testIsPrime_NegativeInput() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.isPrime(-1));
+    }
+
+    @Test
+    @DisplayName("isPrime: 0 and 1 are not prime")
+    void testIsPrime_0And1AreNotPrime() {
+        boolean result = underTest.isPrime(0);
+        assertThat(result).isFalse();
+
+        result = underTest.isPrime(1);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("fizzBuzz: happy path")
+    void testFizzBuzz_HappyPath() {
+        List<String> result = underTest.fizzBuzz(10);
+        assertThat(result.size()).isEqualTo(10);
+
+        for (int i = 1; i <= 10; i++) {
+            if (i % 15 == 0)      assertThat(result.get(i - 1)).isEqualTo("FizzBuzz");
+            else if (i % 3 == 0)  assertThat(result.get(i - 1)).isEqualTo("Fizz");
+            else if (i % 5 == 0)  assertThat(result.get(i - 1)).isEqualTo("Buzz");
+            else                   assertThat(result.get(i - 1)).isEqualTo(String.valueOf(i));
+        }
+    }
+
+    @Test
+    @DisplayName("fizzBuzz: n must be >= 1")
+    void testFizzBuzz_NMustBeGreaterThanOrEqualTo1() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.fizzBuzz(0));
+    }
+
+    @Test
+    @DisplayName("fizzBuzz: n must be <= 10000")
+    void testFizzBuzz_NMustBeLessThanOrEqualTo10000() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.fizzBuzz(10001));
+    }
+
+    @Test
+    @DisplayName("fibonacci: happy path")
+    void testFibonacci_HappyPath() {
+        long result = underTest.fibonacci(5);
+        assertThat(result).isEqualTo(5L);
+    }
+
+    @Test
+    @DisplayName("fibonacci: negative input")
+    void testFibonacci_NegativeInput() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.fibonacci(-1));
+    }
+
+    @Test
+    @DisplayName("fibonacci: overflow-prone input")
+    void testFibonacci_OverflowProneInput() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.fibonacci(86));
+    }
+
+    @Test
+    @DisplayName("gcd: happy path")
+    void testGcd_HappyPath() {
+        int result = underTest.gcd(12, 15);
+        assertThat(result).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("gcd: negative input")
+    void testGcd_NegativeInput() {
+        assertThrows(IllegalArgumentException.class, () -> underTest.gcd(-1, 2));
+        assertThrows(IllegalArgumentException.class, () -> underTest.gcd(1, -2));
+    }
+}

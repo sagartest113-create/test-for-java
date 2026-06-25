@@ -1,0 +1,128 @@
+package com.testcraft.demo.service;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class StringUtilServiceTest {
+
+    @Mock
+    private String input1, input2, input3, input4, input5, input6, input7, input8, input9, input10, strs;
+
+    @InjectMocks
+    private StringUtilService stringUtilService;
+
+    @Test
+    @DisplayName("isPalindrome: happy path")
+    public void testIsPalindrome_HappyPath() {
+        when(input1).thenReturn("radar");
+        boolean result = stringUtilService.isPalindrome(input1);
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("isPalindrome: null input")
+    public void testIsPalindrome_NullInput() {
+        when(input2).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.isPalindrome(input2));
+    }
+
+    @Test
+    @DisplayName("isPalindrome: non-alphanumeric characters")
+    public void testIsPalindrome_NonAlphanumericCharacters() {
+        when(input3).thenReturn("123abc!@#");
+        boolean result = stringUtilService.isPalindrome(input3);
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("reverseWords: happy path")
+    public void testReverseWords_HappyPath() {
+        when(input4).thenReturn("Hello World!");
+        String result = stringUtilService.reverseWords(input4);
+        assertThat(result).isEqualTo("World! Hello");
+    }
+
+    @Test
+    @DisplayName("reverseWords: null input")
+    public void testReverseWords_NullInput() {
+        when(input5).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.reverseWords(input5));
+    }
+
+    @Test
+    @DisplayName("reverseWords: empty input")
+    public void testReverseWords_EmptyInput() {
+        when(input6).thenReturn("");
+        String result = stringUtilService.reverseWords(input6);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("charFrequency: happy path")
+    public void testCharFrequency_HappyPath() {
+        when(input7).thenReturn("Hello World!");
+        Map<Character, Integer> result = stringUtilService.charFrequency(input7);
+        assertThat(result).containsEntry('H', 1)
+                .containsEntry('e', 1)
+                .containsEntry('l', 3)
+                .containsEntry('o', 2)
+                .containsEntry(' ', 1)
+                .containsEntry('W', 1)
+                .containsEntry('r', 1)
+                .containsEntry('d', 1);
+    }
+
+    @Test
+    @DisplayName("charFrequency: null input")
+    public void testCharFrequency_NullInput() {
+        when(input8).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.charFrequency(input8));
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: happy path")
+    public void testLongestCommonPrefix_HappyPath() {
+        String[] strsArray = new String[]{"hello", "helloworld", "hell"};
+        when(strs).thenReturn(strsArray);
+        String result = stringUtilService.longestCommonPrefix(strs);
+        assertThat(result).isEqualTo("hel");
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: null input")
+    public void testLongestCommonPrefix_NullInput() {
+        when(strs).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.longestCommonPrefix(strs));
+    }
+
+    @Test
+    @DisplayName("camelToSnake: happy path")
+    public void testCamelToSnake_HappyPath() {
+        when(input1).thenReturn("myVariableName");
+        String result = stringUtilService.camelToSnake(input1);
+        assertThat(result).isEqualTo("my_variable_name");
+    }
+
+    @Test
+    @DisplayName("camelToSnake: null input")
+    public void testCamelToSnake_NullInput() {
+        when(input2).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.camelToSnake(input2));
+    }
+
+    @Test
+    @DisplayName("camelToSnake: empty input")
+    public void testCamelToSnake_EmptyInput() {
+        when(input3).thenReturn("");
+        String result = stringUtilService.camelToSnake(input3);
+        assertThat(result).isEmpty();
+    }
+}
