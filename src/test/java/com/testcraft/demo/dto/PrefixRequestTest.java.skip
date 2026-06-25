@@ -1,0 +1,57 @@
+package com.testcraft.demo.dto;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Set;
+
+public class PrefixRequestTest {
+
+    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+    @Test
+    @DisplayName("Constructs with valid list of words")
+    void testConstructsWithValidWords() {
+        var request = new PrefixRequest(List.of("word1", "word2"));
+        Assertions.assertThat(request.words()).isEqualTo(List.of("word1", "word2"));
+    }
+
+    @Test
+    @DisplayName("Fails to construct without a list of words")
+    void testFailsToConstructWithoutWords() {
+        Assertions.assertThatThrownBy(() -> new PrefixRequest(null))
+                .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    @DisplayName("Validation fails for null list of words")
+    void testValidationFailsForNullWords() {
+        var request = new PrefixRequest(List.of());
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).hasSize(1);
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be null");
+    }
+
+    @Test
+    @DisplayName("Validation fails for empty list of words")
+    void testValidationFailsForEmptyWords() {
+        var request = new PrefixRequest(List.of());
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).hasSize(1);
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be empty");
+    }
+
+    @Test
+    @DisplayName("Validation passes for non-empty list of words")
+    void testValidationPassesForNonEmptyWords() {
+        var request = new PrefixRequest(List.of("word1", "word2"));
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).isEmpty();
+    }
+}

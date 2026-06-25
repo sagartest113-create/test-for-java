@@ -164,4 +164,45 @@ public class MathControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Inputs must be non-negative"));
     }
+
+    @WithMockUser
+    @Test
+    void testFizzBuzz_LargeInput_HappyPath() throws Exception {
+        // Arrange
+        int n = 1000000;
+        String url = "/api/math/fizzbuzz/" + n;
+
+        // Act & Assert
+        mockMvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.n").value(n));
+    }
+
+    @WithMockUser
+    @Test
+    void testFibonacci_LargeInput_HappyPath() throws Exception {
+        // Arrange
+        int n = 1000000;
+        String url = "/api/math/fibonacci/" + n;
+
+        // Act & Assert
+        mockMvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.n").value(n));
+    }
+
+    @WithMockUser
+    @Test
+    void testGCD_LargeInput_HappyPath() throws Exception {
+        // Arrange
+        int a = 1000000;
+        int b = 2000000;
+        String url = "/api/math/gcd?a=" + a + "&b=" + b;
+
+        // Act & Assert
+        mockMvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.a").value(a))
+                .andExpect(jsonPath("$.b").value(b));
+    }
 }
