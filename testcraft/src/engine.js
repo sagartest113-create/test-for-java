@@ -67,8 +67,7 @@ class Engine {
   async generate(mainPaths) {
     const cfg = this.cfg;
     const basePackage = cfg.basePackage || jp.detectBasePackage(cfg);
-    if (!basePackage) log.warn('Could not detect base package; dependency context may be limited.');
-    log.info(`Base package: ${basePackage}`);
+    log.info(`Base package (informational): ${basePackage}`);
 
     for (const mainPath of mainPaths) {
       const abs = path.join(cfg.repoRoot, mainPath);
@@ -79,7 +78,7 @@ class Engine {
 
       const testPath = jp.mainToTestPath(cfg, mainPath);
       const testClass = jp.testClassName(cfg, mainPath);
-      const dependencies = basePackage ? jp.resolveDependencies(cfg, content, basePackage) : [];
+      const dependencies = jp.resolveDependencies(cfg, content);
 
       // If a test file already exists, AUGMENT it (keep existing tests, add for
       // the changed code) instead of overwriting. Common on PRs to existing code.
