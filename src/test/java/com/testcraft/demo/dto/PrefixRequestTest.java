@@ -14,8 +14,6 @@ import org.assertj.core.api.Assertions;
 import java.util.List;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 public class PrefixRequestTest {
 
     private static Validator validator;
@@ -182,7 +180,9 @@ public class PrefixRequestTest {
         PrefixRequest request = new PrefixRequest(null);
 
         // When and Then
-        Assertions.assertThatThrownBy(() -> new PrefixRequest(null))
-                .isInstanceOf(NullPointerException.class);
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        assertThat(violations).isNotEmpty();
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        assertThat(violation.getMessage()).isEqualTo("words must not be null");
     }
 }

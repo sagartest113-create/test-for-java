@@ -1,16 +1,16 @@
 package com.testcraft.demo.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.testcraft.demo.dto.FizzBuzzResponse;
 import com.testcraft.demo.service.MathService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -21,7 +21,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
 @AutoConfigureMockMvc
 @SpringBootTest
 public class MathControllerTest {
@@ -164,5 +163,37 @@ public class MathControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/math/gcd?a=-1&b=15"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Inputs must be non-negative"));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/factorial/{n} - returns 200 for valid input with authentication")
+    void testFactorialValidInputWithAuth() throws Exception {
+        when(mathService.factorial(5)).thenReturn(120L);
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/math/factorial/5").with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.n").value(5))
+                .andExpect(jsonPath("$.factorial").value(120));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/fizzbuzz/{n} - returns FizzBuzz list for valid input with authentication")
+    void testFizzBuzzValidInputWithAuth() throws Exception {
+        List<String> fizzBuzzList = List.of("1", "2", "Fizz", "4", "Buzz");
+        when(mathService.fizzBuzz(5)).thenReturn(fizzBuzzList);
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/math/fizzbuzz/5").with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.n").value(5))
+                .andExpect(jsonPath("$.result").value(fizzBuzzList));
+    }
+
+    @Test
+    @DisplayName("GET /api/math/gcd - returns gcd of two numbers with authentication")
+    void testGcdWithAuth() throws Exception {
+        when(mathService.gcd(12, 15)).thenReturn(3);
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/math/gcd?a=12&b=15").with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.a").value(12))
+                .andExpect(jsonPath("$.b").value(15))
+                .andExpect(jsonPath("$.gcd").value(3));
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -19,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(StringUtilController.class)
+@WithMockUser
 public class StringUtilControllerTest {
 
     @Autowired
@@ -155,5 +157,76 @@ public class StringUtilControllerTest {
                 .param("input", ""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Input must not be null"));
+    }
+
+    @Test
+    @DisplayName("GET /api/strings/palindrome returns 200 with empty string result")
+    void testIsPalindromeEmptyString() throws Exception {
+        // given
+        String input = "";
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/strings/palindrome")
+                .param("input", input))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.input").value(input))
+                .andExpect(jsonPath("$.palindrome").value(false));
+    }
+
+    @Test
+    @DisplayName("GET /api/strings/reverse-words returns 200 with empty string result")
+    void testReverseWordsEmptyString() throws Exception {
+        // given
+        String sentence = "";
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/strings/reverse-words")
+                .param("sentence", sentence))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.input").value(sentence))
+                .andExpect(jsonPath("$.reversed").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/strings/char-frequency returns 200 with empty string result")
+    void testCharFrequencyEmptyString() throws Exception {
+        // given
+        String input = "";
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/strings/char-frequency")
+                .param("input", input))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.input").value(input))
+                .andExpect(jsonPath("$.frequency").isEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /api/strings/longest-common-prefix returns 200 with empty string result")
+    void testLongestCommonPrefixEmptyString() throws Exception {
+        // given
+        PrefixRequest request = new PrefixRequest(List.of("", "", ""));
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/strings/longest-common-prefix")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.words").isEmpty())
+                .andExpect(jsonPath("$.prefix").isEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /api/strings/camel-to-snake returns 200 with empty string result")
+    void testCamelToSnakeEmptyString() throws Exception {
+        // given
+        String input = "";
+
+        // when
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/strings/camel-to-snake")
+                .param("input", input))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.input").value(input))
+                .andExpect(jsonPath("$.snake_case").isEmpty());
     }
 }

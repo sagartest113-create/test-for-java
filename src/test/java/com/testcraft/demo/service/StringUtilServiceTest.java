@@ -10,6 +10,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class StringUtilServiceTest {
@@ -226,5 +229,57 @@ public class StringUtilServiceTest {
         assertThatThrownBy(() -> stringUtilService.camelToSnake(input))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Input must not be null");
+    }
+
+    @Test
+    @DisplayName("camelToSnake handles multiple consecutive uppercase letters")
+    void camelToSnake_MultipleConsecutiveUppercaseLetters_ReturnsCorrectString() {
+        // Given
+        String input = "myVariableName123";
+
+        // When
+        String result = stringUtilService.camelToSnake(input);
+
+        // Then
+        assertThat(result).isEqualTo("my_variable_name_123");
+    }
+
+    @Test
+    @DisplayName("camelToSnake handles multiple consecutive uppercase letters at the end")
+    void camelToSnake_MultipleConsecutiveUppercaseLettersAtEnd_ReturnsCorrectString() {
+        // Given
+        String input = "myVariableName12345";
+
+        // When
+        String result = stringUtilService.camelToSnake(input);
+
+        // Then
+        assertThat(result).isEqualTo("my_variable_name_12345");
+    }
+
+    @Test
+    @DisplayName("camelToSnake handles multiple consecutive uppercase letters at the start")
+    void camelToSnake_MultipleConsecutiveUppercaseLettersAtStart_ReturnsCorrectString() {
+        // Given
+        String input = "1234567890myVariableName";
+
+        // When
+        String result = stringUtilService.camelToSnake(input);
+
+        // Then
+        assertThat(result).isEqualTo("1234567890_my_variable_name");
+    }
+
+    @Test
+    @DisplayName("camelToSnake handles multiple consecutive uppercase letters at the start and end")
+    void camelToSnake_MultipleConsecutiveUppercaseLettersAtStartAndEnd_ReturnsCorrectString() {
+        // Given
+        String input = "1234567890myVariableName12345";
+
+        // When
+        String result = stringUtilService.camelToSnake(input);
+
+        // Then
+        assertThat(result).isEqualTo("1234567890_my_variable_name_12345");
     }
 }

@@ -90,4 +90,44 @@ public class FizzBuzzResponseTest {
         String expected = "FizzBuzzResponse[n=10, result=[]]";
         assertThat(response.toString()).isEqualTo(expected);
     }
+
+    @Test
+    @DisplayName("validation for valid input")
+    void testValidationValidInput() {
+        int n = 10;
+        List<String> result = List.of("Fizz", "Buzz", "FizzBuzz");
+        FizzBuzzResponse response = new FizzBuzzResponse(n, result);
+
+        org.jboss.validator.ValidationUtils.validateValue(response);
+    }
+
+    @Test
+    @DisplayName("validation for invalid input (n < 0)")
+    void testValidationInvalidInputNNegative() {
+        int n = -10;
+        List<String> result = List.of("Fizz", "Buzz", "FizzBuzz");
+        FizzBuzzResponse response = new FizzBuzzResponse(n, result);
+
+        org.jboss.validator.ValidationUtils.validateValue(response);
+    }
+
+    @Test
+    @DisplayName("validation for invalid input (result null)")
+    void testValidationInvalidInputResultNull() {
+        int n = 10;
+        List<String> result = null;
+        FizzBuzzResponse response = new FizzBuzzResponse(n, result);
+
+        org.jboss.validator.ValidationUtils.validateValue(response);
+    }
+
+    @Test
+    @DisplayName("validation for invalid input (result empty)")
+    void testValidationInvalidInputResultEmpty() {
+        int n = 10;
+        List<String> result = Collections.emptyList();
+        FizzBuzzResponse response = new FizzBuzzResponse(n, result);
+
+        org.jboss.validator.ValidationUtils.validateValue(response);
+    }
 }
