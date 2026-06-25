@@ -1,0 +1,70 @@
+package com.testcraft.demo.dto;
+
+import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import java.util.List;
+
+public class FizzBuzzResponseTest {
+
+    @Test
+    @DisplayName("Constructs with valid input")
+    void constructsWithValidInput() {
+        var response = new FizzBuzzResponse(10, List.of());
+        assertThat(response.n()).isEqualTo(10);
+        assertThat(response.result()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Constructs with null n throws NPE")
+    void constructsWithNullNThrowsNPE() {
+        assertThatThrownBy(() -> new FizzBuzzResponse(null, List.of()))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("n");
+    }
+
+    @Test
+    @DisplayName("Constructs with empty result list")
+    void constructsWithEmptyResultList() {
+        var response = new FizzBuzzResponse(10, List.of());
+        assertThat(response.n()).isEqualTo(10);
+        assertThat(response.result()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Constructs with non-empty result list")
+    void constructsWithNonEmptyResultList() {
+        var response = new FizzBuzzResponse(10, List.of("1", "2"));
+        assertThat(response.n()).isEqualTo(10);
+        assertThat(response.result()).containsExactly("1", "2");
+    }
+
+    @Test
+    @DisplayName("Equals method")
+    void equalsMethod() {
+        var response1 = new FizzBuzzResponse(10, List.of());
+        var response2 = new FizzBuzzResponse(10, List.of());
+        var response3 = new FizzBuzzResponse(20, List.of());
+
+        assertThat(response1).isEqualTo(response2);
+        assertThat(response1).isNotEqualTo(response3);
+    }
+
+    @Test
+    @DisplayName("HashCode method")
+    void hashCodeMethod() {
+        var response1 = new FizzBuzzResponse(10, List.of());
+        var response2 = new FizzBuzzResponse(10, List.of());
+
+        assertThat(response1.hashCode()).isEqualTo(response2.hashCode());
+    }
+
+    @Test
+    @DisplayName("ToString method")
+    void toStringMethod() {
+        var response = new FizzBuzzResponse(10, List.of("1", "2"));
+
+        assertThat(response.toString())
+                .contains("FizzBuzzResponse[n=10, result=[1, 2]]");
+    }
+}

@@ -1,0 +1,109 @@
+package com.testcraft.demo.service;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+public class StringUtilServiceTest {
+
+    @Mock
+    private String input1, input2, input3, input4, input5, input6, input7, input8, input9, input10;
+
+    @InjectMocks
+    private StringUtilService stringUtilService;
+
+    @Test
+    @DisplayName("isPalindrome: happy path")
+    public void testIsPalindrome_HappyPath() {
+        when(input1).thenReturn("A man a plan a canal Panama");
+        boolean result = stringUtilService.isPalindrome(input1);
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    @DisplayName("isPalindrome: negative case - null input")
+    public void testIsPalindrome_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.isPalindrome(null));
+    }
+
+    @Test
+    @DisplayName("isPalindrome: edge case - empty string")
+    public void testIsPalindrome_EmptyString() {
+        when(input2).thenReturn("");
+        boolean result = stringUtilService.isPalindrome(input2);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("reverseWords: happy path")
+    public void testReverseWords_HappyPath() {
+        when(input3).thenReturn("Hello World");
+        String result = stringUtilService.reverseWords(input3);
+        assertThat(result).isEqualTo("World Hello");
+    }
+
+    @Test
+    @DisplayName("reverseWords: negative case - null input")
+    public void testReverseWords_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.reverseWords(null));
+    }
+
+    @Test
+    @DisplayName("charFrequency: happy path")
+    public void testCharFrequency_HappyPath() {
+        when(input4).thenReturn("Hello World");
+        Map<Character, Integer> result = stringUtilService.charFrequency(input4);
+        assertThat(result).containsEntry('H', 1)
+                .containsEntry('e', 1)
+                .containsEntry('l', 3)
+                .containsEntry('o', 2)
+                .containsEntry(' ', 1)
+                .containsEntry('W', 1)
+                .containsEntry('r', 1)
+                .containsEntry('d', 1);
+    }
+
+    @Test
+    @DisplayName("charFrequency: negative case - null input")
+    public void testCharFrequency_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.charFrequency(null));
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: happy path")
+    public void testLongestCommonPrefix_HappyPath() {
+        when(input5).thenReturn(new String[]{"flower", "flow", "flight"});
+        String result = stringUtilService.longestCommonPrefix(input5);
+        assertThat(result).isEqualTo("fl");
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: negative case - empty array")
+    public void testLongestCommonPrefix_EmptyArray() {
+        when(input6).thenReturn(new String[]{});
+        String result = stringUtilService.longestCommonPrefix(input6);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("camelToSnake: happy path")
+    public void testCamelToSnake_HappyPath() {
+        when(input7).thenReturn("myVariableName");
+        String result = stringUtilService.camelToSnake(input7);
+        assertThat(result).isEqualTo("my_variable_name");
+    }
+
+    @Test
+    @DisplayName("camelToSnake: negative case - null input")
+    public void testCamelToSnake_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.camelToSnake(null));
+    }
+}

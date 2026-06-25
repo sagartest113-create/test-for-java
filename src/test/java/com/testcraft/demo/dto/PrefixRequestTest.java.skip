@@ -1,0 +1,116 @@
+package com.testcraft.demo.dto;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
+
+public class PrefixRequestTest {
+
+    private final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
+    private final Validator validator = validatorFactory.getValidator();
+
+    @Test
+    @DisplayName("Constructs with valid input")
+    void testConstructsWithValidInput() {
+        List<String> words = List.of("hello", "world");
+        PrefixRequest request = new PrefixRequest(words);
+        Assertions.assertThat(request.words()).isEqualTo(words);
+    }
+
+    @Test
+    @DisplayName("Fails to construct with null input")
+    void testFailsToConstructWithNullInput() {
+        Assertions.assertThatThrownBy(() -> new PrefixRequest(null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("words");
+    }
+
+    @Test
+    @DisplayName("Fails to construct with empty list input")
+    void testFailsToConstructWithEmptyListInput() {
+        List<String> words = List.of();
+        Assertions.assertThatThrownBy(() -> new PrefixRequest(words))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("words");
+    }
+
+    @Test
+    @DisplayName("Equals returns true for identical objects")
+    void testEqualsReturnsTrueForIdenticalObjects() {
+        List<String> words = List.of("hello", "world");
+        PrefixRequest request1 = new PrefixRequest(words);
+        PrefixRequest request2 = new PrefixRequest(words);
+        Assertions.assertThat(request1.equals(request2)).isTrue();
+    }
+
+    @Test
+    @DisplayName("Equals returns false for different objects")
+    void testEqualsReturnsFalseForDifferentObjects() {
+        List<String> words1 = List.of("hello", "world");
+        List<String> words2 = List.of("foo", "bar");
+        PrefixRequest request1 = new PrefixRequest(words1);
+        PrefixRequest request2 = new PrefixRequest(words2);
+        Assertions.assertThat(request1.equals(request2)).isFalse();
+    }
+
+    @Test
+    @DisplayName("HashCode returns same value for identical objects")
+    void testHashCodeReturnsSameValueForIdenticalObjects() {
+        List<String> words = List.of("hello", "world");
+        PrefixRequest request1 = new PrefixRequest(words);
+        PrefixRequest request2 = new PrefixRequest(words);
+        Assertions.assertThat(request1.hashCode()).isEqualTo(request2.hashCode());
+    }
+
+    @Test
+    @DisplayName("HashCode returns different value for different objects")
+    void testHashCodeReturnsDifferentValueForDifferentObjects() {
+        List<String> words1 = List.of("hello", "world");
+        List<String> words2 = List.of("foo", "bar");
+        PrefixRequest request1 = new PrefixRequest(words1);
+        PrefixRequest request2 = new PrefixRequest(words2);
+        Assertions.assertThat(request1.hashCode()).isNotEqualTo(request2.hashCode());
+    }
+
+    @Test
+    @DisplayName("ToString returns string representation of object")
+    void testToStringReturnsStringRepresentationOfObject() {
+        List<String> words = List.of("hello", "world");
+        PrefixRequest request = new PrefixRequest(words);
+        Assertions.assertThat(request.toString()).isEqualTo("PrefixRequest[words=[hello, world]]");
+    }
+
+    @Test
+    @DisplayName("Validation passes for valid input")
+    void testValidationPassesForValidInput() {
+        List<String> words = List.of("hello", "world");
+        PrefixRequest request = new PrefixRequest(words);
+        Assertions.assertThat(validator.validate(request)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Validation fails for null input")
+    void testValidationFailsForNullInput() {
+        List<String> words = null;
+        PrefixRequest request = new PrefixRequest(words);
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).hasSize(1);
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be null");
+    }
+
+    @Test
+    @DisplayName("Validation fails for empty list input")
+    void testValidationFailsForEmptyListInput() {
+        List<String> words = List.of();
+        PrefixRequest request = new PrefixRequest(words);
+        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
+        Assertions.assertThat(violations).hasSize(1);
+        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
+        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be empty");
+    }
+}
