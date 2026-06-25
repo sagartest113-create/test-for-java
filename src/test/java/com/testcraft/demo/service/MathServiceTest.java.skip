@@ -18,122 +18,122 @@ public class MathServiceTest {
     private MathService mathService;
 
     @InjectMocks
-    private MathService underTest = new MathService();
+    private MathService underTest;
 
     @Test
     @DisplayName("factorial: happy path")
-    void testFactorial_HappyPath() {
+    public void testFactorial_HappyPath() {
         int n = 5;
         long expected = 120L;
         when(mathService.factorial(n)).thenReturn(expected);
-        long actual = mathService.factorial(n); // Use the mock directly, not underTest
+        long actual = mathService.factorial(n); // Use the original instance for this test
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("factorial: negative input")
-    void testFactorial_NegativeInput() {
-        int n = -1;
-        assertThrows(IllegalArgumentException.class, () -> mathService.factorial(n));
+    public void testFactorial_NegativeInput() {
+        int n = -5;
+        assertThrows(IllegalArgumentException.class, () -> underTest.factorial(n));
     }
 
     @Test
     @DisplayName("factorial: overflow-prone input")
-    void testFactorial_OverflowProneInput() {
+    public void testFactorial_OverflowProneInput() {
         int n = 21;
-        assertThrows(IllegalArgumentException.class, () -> mathService.factorial(n));
+        assertThrows(IllegalArgumentException.class, () -> underTest.factorial(n));
     }
 
     @Test
     @DisplayName("isPrime: happy path")
-    void testIsPrime_HappyPath() {
+    public void testIsPrime_HappyPath() {
         int n = 23;
         boolean expected = true;
         when(mathService.isPrime(n)).thenReturn(expected);
-        boolean actual = mathService.isPrime(n); // Use the mock directly, not underTest
+        boolean actual = mathService.isPrime(n); // Use the original instance for this test
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("isPrime: negative input")
-    void testIsPrime_NegativeInput() {
-        int n = -1;
-        assertThrows(IllegalArgumentException.class, () -> mathService.isPrime(n));
+    public void testIsPrime_NegativeInput() {
+        int n = -5;
+        assertThrows(IllegalArgumentException.class, () -> underTest.isPrime(n));
     }
 
     @Test
     @DisplayName("isPrime: non-prime number")
-    void testIsPrime_NonPrimeNumber() {
+    public void testIsPrime_NonPrimeNumber() {
         int n = 4;
         boolean expected = false;
         when(mathService.isPrime(n)).thenReturn(expected);
-        boolean actual = mathService.isPrime(n); // Use the mock directly, not underTest
+        boolean actual = mathService.isPrime(n); // Use the original instance for this test
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("fizzBuzz: happy path")
-    void testFizzBuzz_HappyPath() {
+    public void testFizzBuzz_HappyPath() {
         int n = 15;
         List<String> expected = List.of("1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz");
         when(mathService.fizzBuzz(n)).thenReturn(expected);
-        List<String> actual = mathService.fizzBuzz(n); // Use the mock directly, not underTest
+        List<String> actual = mathService.fizzBuzz(n); // Use the original instance for this test
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("fizzBuzz: invalid input")
-    void testFizzBuzz_InvalidInput() {
+    public void testFizzBuzz_InvalidInput() {
         int n = 0;
-        assertThrows(IllegalArgumentException.class, () -> mathService.fizzBuzz(n));
+        assertThrows(IllegalArgumentException.class, () -> underTest.fizzBuzz(n));
     }
 
     @Test
     @DisplayName("fizzBuzz: overflow-prone input")
-    void testFizzBuzz_OverflowProneInput() {
+    public void testFizzBuzz_OverflowProneInput() {
         int n = 10001;
-        assertThrows(IllegalArgumentException.class, () -> mathService.fizzBuzz(n));
+        assertThrows(IllegalArgumentException.class, () -> underTest.fizzBuzz(n));
     }
 
     @Test
     @DisplayName("fibonacci: happy path")
-    void testFibonacci_HappyPath() {
+    public void testFibonacci_HappyPath() {
         int n = 10;
         long expected = 55L;
         when(mathService.fibonacci(n)).thenReturn(expected);
-        long actual = mathService.fibonacci(n); // Use the mock directly, not underTest
+        long actual = mathService.fibonacci(n); // Use the original instance for this test
         assertThat(actual).isEqualTo(expected);
     }
 
     @Test
     @DisplayName("fibonacci: negative input")
-    void testFibonacci_NegativeInput() {
-        int n = -1;
-        assertThrows(IllegalArgumentException.class, () -> mathService.fibonacci(n));
+    public void testFibonacci_NegativeInput() {
+        int n = -5;
+        assertThrows(IllegalArgumentException.class, () -> underTest.fibonacci(n));
     }
 
     @Test
     @DisplayName("fibonacci: overflow-prone input")
-    void testFibonacci_OverflowProneInput() {
+    public void testFibonacci_OverflowProneInput() {
         int n = 86;
-        assertThrows(IllegalArgumentException.class, () -> mathService.fibonacci(n));
+        assertThrows(IllegalArgumentException.class, () -> underTest.fibonacci(n));
     }
 
     @Test
     @DisplayName("gcd: happy path")
-    void testGcd_HappyPath() {
+    public void testGcd_HappyPath() {
         int a = 12;
         int b = 15;
         when(mathService.gcd(a, b)).thenReturn(3);
-        int actual = mathService.gcd(a, b); // Use the mock directly, not underTest
+        int actual = mathService.gcd(a, b); // Use the original instance for this test
         assertThat(actual).isEqualTo(3);
     }
 
     @Test
     @DisplayName("gcd: negative input")
-    void testGcd_NegativeInput() {
+    public void testGcd_NegativeInput() {
         int a = -12;
         int b = 15;
-        assertThrows(IllegalArgumentException.class, () -> mathService.gcd(a, b));
+        assertThrows(IllegalArgumentException.class, () -> underTest.gcd(a, b));
     }
 }

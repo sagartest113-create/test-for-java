@@ -205,4 +205,30 @@ public class MathControllerTest {
                 .andExpect(jsonPath("$.a").value(a))
                 .andExpect(jsonPath("$.b").value(b));
     }
+
+    @WithMockUser
+    @Test
+    void testFactorial_LargeInput_HappyPath() throws Exception {
+        // Arrange
+        int n = 1000000;
+        String url = "/api/math/factorial/" + n;
+
+        // Act & Assert
+        mockMvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.n").value(n));
+    }
+
+    @WithMockUser
+    @Test
+    void testIsPrime_LargeInput_HappyPath() throws Exception {
+        // Arrange
+        int n = 1000000;
+        String url = "/api/math/prime/" + n;
+
+        // Act & Assert
+        mockMvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.n").value(n));
+    }
 }
