@@ -1,0 +1,17 @@
+{
+  "name": "testcraft-engine",
+  "version": "2.0.0",
+  "description": "TestCraft AI — self-correcting JUnit test generation engine for Java/Maven. Provider-pluggable (Anthropic / OpenAI / Groq / custom).",
+  "type": "commonjs",
+  "main": "src/cli.js",
+  "bin": {
+    "testcraft": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/cli.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "private": true
+}

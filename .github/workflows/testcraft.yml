@@ -1,6 +1,17 @@
-# TestCraft AI — Generate JUnit tests on /generate-tests comment
-# Stack: Java + JUnit 5 + Maven + Groq API
-# Add GROQ_API_KEY in repo Settings → Secrets → Actions
+# TestCraft AI — self-correcting JUnit test generation
+#
+# Trigger: comment "/generate-tests" on a pull request.
+# The engine generates tests for the PR's changed src/main files, then runs a
+# compile → test → repair → coverage loop until the suite is green, and pushes
+# the result back to the PR branch.
+#
+# Configure once (Settings → Secrets and variables → Actions):
+#   Secret   TESTCRAFT_API_KEY    your LLM key (Anthropic / OpenAI / Groq / custom)
+#   Variable TESTCRAFT_PROVIDER   anthropic | openai | groq | custom   (default: anthropic)
+#   Variable TESTCRAFT_MODEL      (optional) model id override
+#   Variable TESTCRAFT_BASE_URL   (only for provider=custom) OpenAI-compatible endpoint
+#
+# Swapping AI = changing the secret/variable. Nothing in the engine changes.
 
 name: 🤖 TestCraft AI — Generate Tests
 
@@ -17,18 +28,16 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Get PR head ref
+      - name: Resolve PR refs
         id: pr
         uses: actions/github-script@v7
         with:
           script: |
             const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner: context.repo.owner, repo: context.repo.repo,
               pull_number: context.payload.issue.number
             });
             core.setOutput('head_ref', pr.data.head.ref);
-            core.setOutput('head_sha', pr.data.head.sha);
             core.setOutput('base_ref', pr.data.base.ref);
 
       - name: Checkout PR branch
@@ -38,55 +47,87 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Node.js
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Run TestCraft — generate tests
+      - name: Generate + self-correct tests
+        id: gen
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.issue.number }}
-          PR_HEAD_REF: ${{ steps.pr.outputs.head_ref }}
-          PR_HEAD_SHA: ${{ steps.pr.outputs.head_sha }}
-        working-directory: .github/scripts
-        run: node generate-tests.js
+          TESTCRAFT_PROVIDER: ${{ vars.TESTCRAFT_PROVIDER || 'anthropic' }}
+          TESTCRAFT_MODEL: ${{ vars.TESTCRAFT_MODEL }}
+          TESTCRAFT_BASE_URL: ${{ vars.TESTCRAFT_BASE_URL }}
+          TESTCRAFT_API_KEY: ${{ secrets.TESTCRAFT_API_KEY }}
+          BASE_REF: ${{ steps.pr.outputs.base_ref }}
+        run: |
+          if [ -z "$TESTCRAFT_API_KEY" ]; then
+            echo "TESTCRAFT_API_KEY secret is not set." >&2
+            echo "status=missing-key" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          node testcraft/src/cli.js \
+            --changed "origin/$BASE_REF" \
+            --java-home "$JAVA_HOME" \
+            --coverage-target 95 \
+            --quarantine-on-fail \
+          && echo "status=ok" >> "$GITHUB_OUTPUT" \
+          || echo "status=failed" >> "$GITHUB_OUTPUT"
 
-      - name: Comment on PR with result
+      - name: Commit generated tests
+        if: steps.gen.outputs.status == 'ok'
+        run: |
+          git config user.name  "TestCraft AI Bot"
+          git config user.email "testcraft-ai[bot]@users.noreply.github.com"
+          git add -A "src/test/java"
+          if git diff --cached --quiet; then
+            echo "No test changes to commit."
+          else
+            git commit -m "🤖 TestCraft AI: add self-corrected JUnit tests"
+            git push origin "HEAD:${{ steps.pr.outputs.head_ref }}"
+          fi
+
+      - name: Comment result
         if: always()
         uses: actions/github-script@v7
-        env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         with:
           script: |
             const fs = require('fs');
-            const resultPath = process.env.GITHUB_WORKSPACE + '/.github/scripts/result.json';
+            const status = ${{ toJSON(steps.gen.outputs.status) }} || 'unknown';
             let body = '🤖 **TestCraft AI** — ';
-            if (process.env.GROQ_API_KEY === '' || !process.env.GROQ_API_KEY) {
-              body += '⚠️ `GROQ_API_KEY` is not set. Add it in repo Settings → Secrets → Actions.';
-            } else if (fs.existsSync(resultPath)) {
-              const r = JSON.parse(fs.readFileSync(resultPath, 'utf8'));
-              if (r.success) {
-                body += `✅ Generated **${r.filesCreated || 0}** test file(s).\n\n`;
-                if (r.details) {
-                  body += '| Source File | Test File |\n|---|---|\n';
-                  for (const [src, test] of Object.entries(r.details)) {
-                    const srcShort = src.replace('src/main/java/', '');
-                    const status = test.startsWith('ERROR') ? `❌ ${test}` : `✅ \`${test.replace('src/test/java/', '')}\``;
-                    body += `| \`${srcShort}\` | ${status} |\n`;
-                  }
-                }
-              } else {
-                body += `❌ ${r.error || 'Generation failed.'}`;
-              }
+
+            if (status === 'missing-key') {
+              body += '⚠️ `TESTCRAFT_API_KEY` is not set. Add it under Settings → Secrets and variables → Actions.';
+            } else if (!fs.existsSync('testcraft-result.json')) {
+              body += '❌ Run did not complete — check the Actions log.';
             } else {
-              body += '❌ Check the Actions logs for details.';
+              const r = JSON.parse(fs.readFileSync('testcraft-result.json', 'utf8'));
+              const cov = r.coverage ? `${r.coverage.line}% line / ${r.coverage.branch}% branch` : 'n/a';
+              const icon = r.status === 'green' ? '✅' : r.status === 'partial' ? '⚠️' : '❌';
+              body += `${icon} Added **${r.testCasesAdded}** test case(s) across **${r.testFilesGenerated}** file(s) ` +
+                      `(${r.createdFiles} new, ${r.extendedFiles} extended).\n\n`;
+              body += `| Metric | Value |\n|---|---|\n`;
+              body += `| Suite status | ${r.status} |\n`;
+              body += `| Test cases added | ${r.testCasesAdded} |\n`;
+              body += `| Test files (new / extended) | ${r.testFilesGenerated} (${r.createdFiles} / ${r.extendedFiles}) |\n`;
+              body += `| Coverage | ${cov} |\n`;
+              if (r.quarantined && r.quarantined.length) {
+                body += `\n⚠️ Could not green (quarantined to \`.skip\`):\n` +
+                        r.quarantined.map((f) => `- \`${f}\``).join('\n') + '\n';
+              }
+              body += `\n<details><summary>Per-file breakdown</summary>\n\n| Test file | Cases | Type | Mode |\n|---|---|---|---|\n` +
+                      r.files.map((f) => `| \`${f.test.replace('src/test/java/', '')}\` | ${f.tests} | ${f.type} | ${f.mode === 'extend' ? 'extended' : 'new'} |`).join('\n') +
+                      `\n\n</details>`;
             }
+
             await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.payload.issue.number, body
             });
