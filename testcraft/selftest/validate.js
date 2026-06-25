@@ -227,6 +227,26 @@ function buildTempProject() {
   }
   log.ok(`SELFTEST: extend mode verified (4 files detected as existing, augmented, still green)`);
 
-  log.ok('SELFTEST PASSED — generate/extend→compile→repair→green→coverage all verified.');
+  // Third pass: sequential (one-file-at-a-time) mode on a FRESH project, with the
+  // deliberately-broken service file, proving per-file repair → green.
+  log.step('Third pass: sequential mode (fresh project, broken service file)');
+  const seqRoot = buildTempProject();
+  const seqCfg = resolveConfig({
+    repoRoot: seqRoot,
+    javaHome: process.env.TESTCRAFT_JAVA_HOME || JDK21,
+    maxFixAttempts: 3,
+    sequential: true,
+    quarantineOnFail: true
+  });
+  const engine3 = new Engine(seqCfg, fakeProvider());
+  await engine3.generate(MAIN_FILES);
+  const green3 = await engine3.makeGreenSequential();
+  if (green3.green !== true || green3.totals.failures !== 0 || green3.totals.errors !== 0) {
+    log.err(`SELFTEST FAILED: sequential pass not green (${JSON.stringify(green3)})`);
+    process.exit(1);
+  }
+  log.ok(`SELFTEST: sequential mode verified (${green3.totals.tests} tests green, per-file repair worked)`);
+
+  log.ok('SELFTEST PASSED — generate/extend/sequential→compile→repair→green→coverage all verified.');
   log.dim(`(temp project left at ${repoRoot})`);
 })().catch((e) => { log.err(e.stack || e.message); process.exit(1); });
