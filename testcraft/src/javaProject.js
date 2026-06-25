@@ -77,15 +77,22 @@ function mainToTestPath(cfg, mainPath) {
   return path.join(cfg.srcTest, dir, `${base}${cfg.testSuffix}.java`).replace(/\\/g, '/');
 }
 
-/** Resolve in-project imports of `content` to their source files (for context). */
-function resolveDependencies(cfg, content, basePackage, limit = 6) {
-  const prefix = basePackage.replace(/\./g, '\\.');
-  const re = new RegExp(`^import\\s+(${prefix}[\\w.]+);`, 'gm');
+/**
+ * Resolve in-project imports of `content` to their source files (for context).
+ *
+ * Project files are detected by whether the import maps to an actual file under
+ * src/main/java — no base-package guess needed. Library imports (java.*,
+ * jakarta.*, org.springframework.*, …) have no such file and are skipped.
+ */
+function resolveDependencies(cfg, content, limit = 8) {
+  // non-static, non-wildcard single-type imports
+  const re = /^import\s+([\w.]+);/gm;
   const deps = [];
   let m;
   const seen = new Set();
   while ((m = re.exec(content)) !== null && deps.length < limit) {
     const fqcn = m[1];
+    if (fqcn.endsWith('.*')) continue;
     if (seen.has(fqcn)) continue;
     seen.add(fqcn);
     const rel = path.join(cfg.srcMain, fqcn.replace(/\./g, '/') + '.java');
