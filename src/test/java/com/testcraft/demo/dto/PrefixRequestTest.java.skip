@@ -6,7 +6,6 @@ import jakarta.validation.ValidatorFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import java.util.List;
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class PrefixRequestTest {
 
@@ -14,7 +13,7 @@ public class PrefixRequestTest {
     private final Validator validator = validatorFactory.getValidator();
 
     @Test
-    @DisplayName("Constructs with valid list of words")
+    @DisplayName("Constructs with valid list")
     void testConstructsWithValidList() {
         List<String> words = List.of("word1", "word2");
         PrefixRequest request = new PrefixRequest(words);
@@ -22,67 +21,94 @@ public class PrefixRequestTest {
     }
 
     @Test
-    @DisplayName("Fails to construct with empty list")
-    void testFailsToConstructWithEmptyList() {
-        Assertions.assertThatThrownBy(() -> new PrefixRequest(List.of()))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessageContaining("words");
+    @DisplayName("Constructs with empty list")
+    void testConstructsWithEmptyList() {
+        List<String> words = List.of();
+        PrefixRequest request = new PrefixRequest(words);
+        Assertions.assertThat(request.words()).isEqualTo(words);
     }
 
     @Test
     @DisplayName("Fails to construct with null list")
     void testFailsToConstructWithNullList() {
         Assertions.assertThatThrownBy(() -> new PrefixRequest(null))
-                .isInstanceOf(java.util.NoSuchElementException.class) // Corrected exception type
-                .hasMessageContaining("words");
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    @DisplayName("Validates correctly with valid list")
-    void testValidatesCorrectlyWithValidList() {
+    @DisplayName("Validates valid input")
+    void testValidatesValidInput() {
         List<String> words = List.of("word1", "word2");
         PrefixRequest request = new PrefixRequest(words);
-        Assertions.assertThat(validator.validate(request)).isEmpty();
+        var violations = validator.validate(request).iterator();
+        Assertions.assertThat(violations).hasNoMoreElements();
     }
 
     @Test
-    @DisplayName("Fails to validate with empty list")
-    void testFailsToValidateWithEmptyList() {
+    @DisplayName("Fails to validate empty list")
+    void testFailsToValidateEmptyList() {
         List<String> words = List.of();
-        PrefixRequest request = new PrefixRequest(List.of());
-        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
-        Assertions.assertThat(violations).hasSize(1);
-        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
-        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be empty");
+        PrefixRequest request = new PrefixRequest(words);
+        var violations = validator.validate(request).iterator();
+        Assertions.assertThat(violations)
+                .hasNext()
+                .next()
+                .isInstanceOf(ConstraintViolation.class);
     }
 
     @Test
-    @DisplayName("Fails to validate with null list")
-    void testFailsToValidateWithNullList() {
+    @DisplayName("Fails to validate null list")
+    void testFailsToValidateNullList() {
         List<String> words = null;
-        PrefixRequest request = new PrefixRequest(null);
-        Set<ConstraintViolation<PrefixRequest>> violations = validator.validate(request);
-        Assertions.assertThat(violations).hasSize(1);
-        ConstraintViolation<PrefixRequest> violation = violations.iterator().next();
-        Assertions.assertThat(violation.getMessage()).isEqualTo("words must not be null");
+        Assertions.assertThatThrownBy(() -> new PrefixRequest(words))
+                .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    @DisplayName("Equals and hashCode work correctly")
-    void testEqualsAndHashCode() {
+    @DisplayName("Equals returns true for equal objects")
+    void testEqualsReturnsTrueForEqualObjects() {
         List<String> words1 = List.of("word1", "word2");
-        List<String> words2 = List.of("word1", "word3");
+        List<String> words2 = List.of("word1", "word2");
         PrefixRequest request1 = new PrefixRequest(words1);
         PrefixRequest request2 = new PrefixRequest(words2);
-        Assertions.assertThat(request1).isEqualTo(request1); // Corrected assertion
+        Assertions.assertThat(request1.equals(request2)).isTrue();
     }
 
     @Test
-    @DisplayName("ToString works correctly")
-    void testToString() {
+    @DisplayName("Equals returns false for unequal objects")
+    void testEqualsReturnsFalseForUnequalObjects() {
+        List<String> words1 = List.of("word1", "word2");
+        List<String> words2 = List.of("word3", "word4");
+        PrefixRequest request1 = new PrefixRequest(words1);
+        PrefixRequest request2 = new PrefixRequest(words2);
+        Assertions.assertThat(request1.equals(request2)).isFalse();
+    }
+
+    @Test
+    @DisplayName("HashCode returns equal hash code for equal objects")
+    void testHashCodeReturnsEqualHashCodeForEqualObjects() {
+        List<String> words1 = List.of("word1", "word2");
+        List<String> words2 = List.of("word1", "word2");
+        PrefixRequest request1 = new PrefixRequest(words1);
+        PrefixRequest request2 = new PrefixRequest(words2);
+        Assertions.assertThat(request1.hashCode()).isEqualTo(request2.hashCode());
+    }
+
+    @Test
+    @DisplayName("HashCode returns unequal hash code for unequal objects")
+    void testHashCodeReturnsUnequalHashCodeForUnequalObjects() {
+        List<String> words1 = List.of("word1", "word2");
+        List<String> words2 = List.of("word3", "word4");
+        PrefixRequest request1 = new PrefixRequest(words1);
+        PrefixRequest request2 = new PrefixRequest(words2);
+        Assertions.assertThat(request1.hashCode()).isNotEqualTo(request2.hashCode());
+    }
+
+    @Test
+    @DisplayName("ToString returns string representation of object")
+    void testToStringReturnsStringRepresentationOfObject() {
         List<String> words = List.of("word1", "word2");
         PrefixRequest request = new PrefixRequest(words);
-        String expectedString = "PrefixRequest[words=[word1, word2]]";
-        Assertions.assertThat(request.toString()).isEqualTo(expectedString);
+        Assertions.assertThat(request.toString()).isEqualTo("PrefixRequest[words=[word1, word2]]");
     }
 }

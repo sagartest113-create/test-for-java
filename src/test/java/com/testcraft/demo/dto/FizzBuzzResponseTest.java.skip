@@ -10,61 +10,73 @@ public class FizzBuzzResponseTest {
 
     @Test
     @DisplayName("Constructs with valid input")
-    void constructsWithValidInput() {
+    void testConstructsWithValidInput() {
         var response = new FizzBuzzResponse(10, List.of());
         assertThat(response.n()).isEqualTo(10);
         assertThat(response.result()).isEmpty();
     }
 
     @Test
-    @DisplayName("Constructs with null n throws NPE")
-    void constructsWithNullNThrowsNpe() {
+    @DisplayName("Constructs with invalid input (null)")
+    void testConstructsWithInvalidInputNull() {
         assertThatThrownBy(() -> new FizzBuzzResponse(null, List.of()))
-                .isInstanceOf(java.lang.NullPointerException.class);
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("n");
     }
 
     @Test
-    @DisplayName("Constructs with empty result list")
-    void constructsWithEmptyResultList() {
+    @DisplayName("Constructs with invalid input (negative number)")
+    void testConstructsWithInvalidInputNegativeNumber() {
+        assertThatThrownBy(() -> new FizzBuzzResponse(-10, List.of()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("n must be greater than or equal to 0");
+    }
+
+    @Test
+    @DisplayName("Accessors return correct values")
+    void testAccessorsReturnCorrectValues() {
         var response = new FizzBuzzResponse(10, List.of());
         assertThat(response.n()).isEqualTo(10);
         assertThat(response.result()).isEmpty();
     }
 
     @Test
-    @DisplayName("Constructs with non-empty result list")
-    void constructsWithNonEmptyResultList() {
-        var response = new FizzBuzzResponse(10, List.of("1", "2"));
-        assertThat(response.n()).isEqualTo(10);
-        assertThat(response.result()).containsExactly("1", "2");
-    }
-
-    @Test
-    @DisplayName("Equals method")
-    void equalsMethod() {
+    @DisplayName("Equals returns true for equal objects")
+    void testEqualsReturnsTrueForEqualObjects() {
         var response1 = new FizzBuzzResponse(10, List.of());
         var response2 = new FizzBuzzResponse(10, List.of());
-        var response3 = new FizzBuzzResponse(20, List.of());
-
         assertThat(response1).isEqualTo(response2);
-        assertThat(response1).isNotEqualTo(response3);
     }
 
     @Test
-    @DisplayName("HashCode method")
-    void hashCodeMethod() {
+    @DisplayName("Equals returns false for unequal objects")
+    void testEqualsReturnsFalseForUnequalObjects() {
+        var response1 = new FizzBuzzResponse(10, List.of());
+        var response2 = new FizzBuzzResponse(20, List.of());
+        assertThat(response1).isNotEqualTo(response2);
+    }
+
+    @Test
+    @DisplayName("HashCode returns same value for equal objects")
+    void testHashCodeReturnsSameValueForEqualObjects() {
         var response1 = new FizzBuzzResponse(10, List.of());
         var response2 = new FizzBuzzResponse(10, List.of());
-
         assertThat(response1.hashCode()).isEqualTo(response2.hashCode());
     }
 
     @Test
-    @DisplayName("ToString method")
-    void toStringMethod() {
-        var response = new FizzBuzzResponse(10, List.of("1", "2"));
+    @DisplayName("HashCode returns different values for unequal objects")
+    void testHashCodeReturnsDifferentValuesForUnequalObjects() {
+        var response1 = new FizzBuzzResponse(10, List.of());
+        var response2 = new FizzBuzzResponse(20, List.of());
+        assertThat(response1.hashCode()).isNotEqualTo(response2.hashCode());
+    }
 
+    @Test
+    @DisplayName("ToString returns correct string representation")
+    void testToStringReturnsCorrectStringRepresentation() {
+        var response = new FizzBuzzResponse(10, List.of());
         assertThat(response.toString())
-                .contains("FizzBuzzResponse[n=10, result=[1, 2]]");
+                .isEqualTo("FizzBuzzResponse[n=10, result=[]]");
     }
 }

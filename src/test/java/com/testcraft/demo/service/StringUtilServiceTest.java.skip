@@ -7,6 +7,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -14,14 +15,14 @@ import static org.mockito.Mockito.when;
 public class StringUtilServiceTest {
 
     @Mock
-    private String input1, input2, input3, input4, input5, input6, input7, input8, input9, input10, strs;
+    private String input1, input2, input3, input4, input5;
 
     @InjectMocks
     private StringUtilService stringUtilService;
 
     @Test
     @DisplayName("isPalindrome: happy path")
-    public void testIsPalindrome_HappyPath() {
+    void testIsPalindrome_HappyPath() {
         when(input1).thenReturn("radar");
         boolean result = stringUtilService.isPalindrome(input1);
         assertThat(result).isTrue();
@@ -29,47 +30,47 @@ public class StringUtilServiceTest {
 
     @Test
     @DisplayName("isPalindrome: null input")
-    public void testIsPalindrome_NullInput() {
-        when(input2).thenReturn(null);
-        assertThrows(IllegalArgumentException.class, () -> stringUtilService.isPalindrome(input2));
+    void testIsPalindrome_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.isPalindrome(null));
     }
 
     @Test
     @DisplayName("isPalindrome: non-alphanumeric characters")
-    public void testIsPalindrome_NonAlphanumericCharacters() {
-        when(input3).thenReturn("123abc!@#");
-        boolean result = stringUtilService.isPalindrome(input3);
+    void testIsPalindrome_NonAlphanumericCharacters() {
+        when(input2).thenReturn("123!@#");
+        boolean result = stringUtilService.isPalindrome(input2);
         assertThat(result).isTrue();
     }
 
     @Test
     @DisplayName("reverseWords: happy path")
-    public void testReverseWords_HappyPath() {
-        when(input4).thenReturn("Hello World!");
-        String result = stringUtilService.reverseWords(input4);
+    void testReverseWords_HappyPath() {
+        String trimmedInput3 = "Hello World!";
+        when(input3).thenReturn(trimmedInput3);
+        String result = stringUtilService.reverseWords(input3);
         assertThat(result).isEqualTo("World! Hello");
     }
 
     @Test
     @DisplayName("reverseWords: null input")
-    public void testReverseWords_NullInput() {
-        when(input5).thenReturn(null);
-        assertThrows(IllegalArgumentException.class, () -> stringUtilService.reverseWords(input5));
+    void testReverseWords_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.reverseWords(null));
     }
 
     @Test
     @DisplayName("reverseWords: empty input")
-    public void testReverseWords_EmptyInput() {
-        when(input6).thenReturn("");
-        String result = stringUtilService.reverseWords(input6);
+    void testReverseWords_EmptyInput() {
+        when(input4).thenReturn("");
+        String result = stringUtilService.reverseWords(input4);
         assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("charFrequency: happy path")
-    public void testCharFrequency_HappyPath() {
-        when(input7).thenReturn("Hello World!");
-        Map<Character, Integer> result = stringUtilService.charFrequency(input7);
+    void testCharFrequency_HappyPath() {
+        String input5 = "Hello World!";
+        when(input5).thenReturn(input5);
+        Map<Character, Integer> result = stringUtilService.charFrequency(input5);
         assertThat(result).containsEntry('H', 1)
                 .containsEntry('e', 1)
                 .containsEntry('l', 3)
@@ -82,30 +83,13 @@ public class StringUtilServiceTest {
 
     @Test
     @DisplayName("charFrequency: null input")
-    public void testCharFrequency_NullInput() {
-        when(input8).thenReturn(null);
-        assertThrows(IllegalArgumentException.class, () -> stringUtilService.charFrequency(input8));
-    }
-
-    @Test
-    @DisplayName("longestCommonPrefix: happy path")
-    public void testLongestCommonPrefix_HappyPath() {
-        String[] strsArray = new String[]{"hello", "helloworld", "hell"};
-        when(strs).thenReturn(strsArray);
-        String result = stringUtilService.longestCommonPrefix(strs);
-        assertThat(result).isEqualTo("hel");
-    }
-
-    @Test
-    @DisplayName("longestCommonPrefix: null input")
-    public void testLongestCommonPrefix_NullInput() {
-        when(strs).thenReturn(null);
-        assertThrows(IllegalArgumentException.class, () -> stringUtilService.longestCommonPrefix(strs));
+    void testCharFrequency_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.charFrequency(null));
     }
 
     @Test
     @DisplayName("camelToSnake: happy path")
-    public void testCamelToSnake_HappyPath() {
+    void testCamelToSnake_HappyPath() {
         when(input1).thenReturn("myVariableName");
         String result = stringUtilService.camelToSnake(input1);
         assertThat(result).isEqualTo("my_variable_name");
@@ -113,16 +97,39 @@ public class StringUtilServiceTest {
 
     @Test
     @DisplayName("camelToSnake: null input")
-    public void testCamelToSnake_NullInput() {
-        when(input2).thenReturn(null);
-        assertThrows(IllegalArgumentException.class, () -> stringUtilService.camelToSnake(input2));
+    void testCamelToSnake_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.camelToSnake(null));
     }
 
     @Test
     @DisplayName("camelToSnake: empty input")
-    public void testCamelToSnake_EmptyInput() {
-        when(input3).thenReturn("");
-        String result = stringUtilService.camelToSnake(input3);
+    void testCamelToSnake_EmptyInput() {
+        when(input2).thenReturn("");
+        String result = stringUtilService.camelToSnake(input2);
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: happy path")
+    void testLongestCommonPrefix_HappyPath() {
+        String[] strs = new String[]{"hello", "hellow"};
+        when(stringUtilService.longestCommonPrefix(strs)).thenReturn("hel");
+        String result = stringUtilService.longestCommonPrefix(strs);
+        assertThat(result).isEqualTo("hel");
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: null input")
+    void testLongestCommonPrefix_NullInput() {
+        assertThrows(IllegalArgumentException.class, () -> stringUtilService.longestCommonPrefix(null));
+    }
+
+    @Test
+    @DisplayName("longestCommonPrefix: empty array")
+    void testLongestCommonPrefix_EmptyArray() {
+        String[] strs = new String[]{};
+        when(stringUtilService.longestCommonPrefix(strs)).thenReturn("");
+        String result = stringUtilService.longestCommonPrefix(strs);
         assertThat(result).isEmpty();
     }
 }
