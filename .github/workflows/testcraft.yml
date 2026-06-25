@@ -67,6 +67,10 @@ jobs:
           TESTCRAFT_MODEL: ${{ vars.TESTCRAFT_MODEL || secrets.TESTCRAFT_MODEL }}
           TESTCRAFT_BASE_URL: ${{ vars.TESTCRAFT_BASE_URL || secrets.TESTCRAFT_BASE_URL }}
           TESTCRAFT_API_KEY: ${{ secrets.TESTCRAFT_API_KEY }}
+          # For weaker models: set Variable TESTCRAFT_SEQUENTIAL=1 (one file at a time)
+          # and bump TESTCRAFT_MAX_FIX_ATTEMPTS (e.g. 6). Both optional.
+          TESTCRAFT_SEQUENTIAL: ${{ vars.TESTCRAFT_SEQUENTIAL || secrets.TESTCRAFT_SEQUENTIAL }}
+          TESTCRAFT_MAX_FIX_ATTEMPTS: ${{ vars.TESTCRAFT_MAX_FIX_ATTEMPTS || secrets.TESTCRAFT_MAX_FIX_ATTEMPTS }}
           BASE_REF: ${{ steps.pr.outputs.base_ref }}
         run: |
           if [ -z "$TESTCRAFT_API_KEY" ]; then

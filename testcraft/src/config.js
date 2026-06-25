@@ -115,6 +115,8 @@ function resolveConfig(overrides = {}) {
     // If a test file still fails after maxFixAttempts, quarantine it to *.skip
     // instead of leaving the whole suite red. Off by default — we want green.
     quarantineOnFail: overrides.quarantineOnFail != null ? overrides.quarantineOnFail : (process.env.TESTCRAFT_QUARANTINE === '1'),
+    // Process one file at a time (better for weaker models — see README).
+    sequential: overrides.sequential != null ? overrides.sequential : (process.env.TESTCRAFT_SEQUENTIAL === '1'),
 
     // --- selection ---
     dryRun: !!overrides.dryRun

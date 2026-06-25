@@ -29,6 +29,7 @@ function parseArgs(argv) {
       case '--max-fix-attempts': o.maxFixAttempts = parseInt(next(), 10); break;
       case '--max-coverage-rounds': o.maxCoverageRounds = parseInt(next(), 10); break;
       case '--quarantine-on-fail': o.quarantineOnFail = true; break;
+      case '--sequential': o.sequential = true; break;
       case '--no-coverage': o.noCoverage = true; break;
       case '--dry-run': o.dryRun = true; break;
       case '--print-config': o.printConfig = true; break;
@@ -65,6 +66,7 @@ Loop:
   --max-coverage-rounds <n>   coverage-fill iterations (default 3)
   --no-coverage               stop after all-green; skip coverage loop
   --quarantine-on-fail        rename still-failing tests to *.skip instead of failing the run
+  --sequential                take each file to green one-at-a-time (better for weaker models)
 
 Env / project:
   --repo <dir>                project root (default cwd)
@@ -119,7 +121,7 @@ async function main() {
 
   if (cfg.dryRun) { log.ok('dry-run complete (no LLM calls made).'); return; }
 
-  const green = await engine.makeGreen();
+  const green = cfg.sequential ? await engine.makeGreenSequential() : await engine.makeGreen();
   const suiteRed = green.green === false;
   if (suiteRed) {
     log.err('Suite is not green. Re-run with --quarantine-on-fail to isolate stubborn files, or raise --max-fix-attempts.');

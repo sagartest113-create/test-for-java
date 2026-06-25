@@ -102,17 +102,33 @@ class Engine {
     log.step(`Generating ${this.units.size} test class(es) (${created} new, ${extended} extending existing)`);
     for (const u of this.units.values()) {
       if (cfg.dryRun) { log.dim(`  [dry-run] would ${u.mode} ${u.testPath}`); continue; }
-      const user = u.mode === 'extend'
-        ? prompts.extendPrompt({ ...u, existingTest: u.existingTest })
-        : prompts.generatePrompt(u);
-      const code = prompts.extractJava(await this.provider.complete({
-        system: prompts.systemPrompt(u.fileType),
-        user
-      }));
-      u.current = code;
-      writeFileSafe(path.join(cfg.repoRoot, u.testPath), code);
+      await this.generateUnit(u);
       log.ok(`${u.mode === 'extend' ? 'extended' : 'generated'} [${u.fileType}] ${u.testPath}`);
     }
+  }
+
+  /** Generate (or regenerate) one unit's test, with a local sanity check + one strict retry. */
+  async generateUnit(u) {
+    const cfg = this.cfg;
+    const baseUser = u.mode === 'extend'
+      ? prompts.extendPrompt({ ...u, existingTest: u.existingTest })
+      : prompts.generatePrompt(u);
+    let code = prompts.extractJava(await this.provider.complete({
+      system: prompts.systemPrompt(u.fileType), user: baseUser
+    }));
+    const san = prompts.sanityValidJava(code);
+    if (!san.ok) {
+      log.warn(`  ${u.testPath}: ${san.reason}; regenerating once (strict)`);
+      const strictUser = baseUser +
+        '\n\nIMPORTANT: Output ONLY one complete, compilable Java class. No markdown fences (```), ' +
+        'no prose. Do not truncate — finish every method and close every brace.';
+      code = prompts.extractJava(await this.provider.complete({
+        system: prompts.systemPrompt(u.fileType), user: strictUser
+      }));
+    }
+    u.current = code;
+    writeFileSafe(path.join(cfg.repoRoot, u.testPath), code);
+    return u;
   }
 
   /* ----- Phase 1: drive the suite to all-green ----- */
@@ -175,6 +191,86 @@ class Engine {
       }
     }
     return { green: false };
+  }
+
+  /* ----- Phase 1 (alt): take each file to green on its own ----- */
+  /*
+   * Better for weaker models: isolating one test file means compiler errors
+   * can't mask each other, the LLM context stays small, and one bad file never
+   * blocks the rest. Files that can't be greened are quarantined to *.skip.
+   */
+  async makeGreenSequential() {
+    const cfg = this.cfg;
+    if (cfg.dryRun) return { green: false, dryRun: true };
+    const abs = (rel) => path.join(cfg.repoRoot, rel);
+    const hold = (u) => { if (fs.existsSync(abs(u.testPath))) fs.renameSync(abs(u.testPath), abs(u.testPath) + '.hold'); };
+    const restore = (u) => { if (fs.existsSync(abs(u.testPath) + '.hold')) fs.renameSync(abs(u.testPath) + '.hold', abs(u.testPath)); };
+
+    const units = [...this.units.values()];
+
+    // A) Hold all our generated files aside, then clear any pre-existing broken
+    //    tests once (so they don't fail every per-file compile below).
+    units.forEach(hold);
+    for (let i = 0; i <= cfg.maxFixAttempts; i++) {
+      const comp = mvn.compileTests(cfg);
+      if (comp.ok) break;
+      const broken = Object.keys(comp.errorsByFile);
+      if (!broken.length) break;
+      if (cfg.quarantineOnFail) { this.quarantineFiles(broken, 'pre-existing test fails to compile'); continue; }
+      log.warn('pre-existing tests do not compile and --quarantine-on-fail is off; results may be unreliable');
+      break;
+    }
+
+    // B) One file at a time.
+    let greenCount = 0;
+    for (const u of units) {
+      log.step(`Sequential: ${u.testPath}`);
+      restore(u);
+      let ok = false;
+      for (let attempt = 1; attempt <= cfg.maxFixAttempts + 1; attempt++) {
+        const san = prompts.sanityValidJava(u.current);
+        if (!san.ok) {
+          if (attempt > cfg.maxFixAttempts) break;
+          log.warn(`  ${san.reason}; regenerating`);
+          await this.generateUnit(u);
+          continue;
+        }
+        const comp = mvn.compileTests(cfg);
+        if (!comp.ok) {
+          if (comp.errorsByFile[u.testPath]) {
+            if (attempt > cfg.maxFixAttempts) break;
+            await this.repair(u, comp.errorsByFile[u.testPath], null);
+            continue;
+          }
+          // a pre-existing file slipped through; quarantine and retry
+          if (cfg.quarantineOnFail) { this.quarantineFiles(Object.keys(comp.errorsByFile), 'pre-existing'); continue; }
+          break;
+        }
+        const res = mvn.runTests(cfg, { only: [u.testClass] });
+        const t = res.totals;
+        if (res.ok && t.failures === 0 && t.errors === 0) { ok = true; break; }
+        if (attempt > cfg.maxFixAttempts) break;
+        const fqcn = Object.keys(res.byClass)[0];
+        await this.repair(u, null, fqcn ? res.byClass[fqcn].failures : []);
+      }
+      if (ok) { u.lastGreen = u.current; greenCount++; log.ok(`  green (${u.testClass})`); }
+      else {
+        if (fs.existsSync(abs(u.testPath))) {
+          fs.renameSync(abs(u.testPath), abs(u.testPath) + '.skip');
+          this.quarantined.push(u.testPath);
+        }
+        this.units.delete(u.testPath);
+        log.warn(`  could not green ${u.testPath} — quarantined`);
+      }
+    }
+
+    // C) Final confirmation across everything that survived.
+    log.step('Sequential: final full verify');
+    const comp = mvn.compileTests(cfg);
+    const res = comp.ok ? mvn.runTests(cfg) : { ok: false, totals: { tests: 0, failures: 0, errors: 0, skipped: 0 } };
+    const allPass = comp.ok && res.ok && res.totals.failures === 0 && res.totals.errors === 0;
+    log.info(`greened ${greenCount}/${units.length} file(s); quarantined ${this.quarantined.length}`);
+    return { green: allPass ? (this.quarantined.length ? 'partial' : true) : 'partial', totals: res.totals };
   }
 
   async repair(unit, compileErrors, failures) {

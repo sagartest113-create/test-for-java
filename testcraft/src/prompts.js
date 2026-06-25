@@ -13,7 +13,9 @@ General rules:
 - Prefer AssertJ (org.assertj.core.api.Assertions.assertThat); JUnit assertions otherwise.
 - Add a concise @DisplayName to each @Test.
 - Cover the happy path, negative/edge cases, boundaries, and every branch you can reach.
-- Do not write tests that depend on wall-clock time, randomness, network, or real files.`;
+- Do not write tests that depend on wall-clock time, randomness, network, or real files.
+- Return ONE complete class. Never stop mid-method or mid-file, and close every brace.
+  If the class would be very long, prefer fewer focused tests over leaving it truncated.`;
 
 function systemPrompt(fileType) {
   switch (fileType) {
@@ -176,6 +178,33 @@ function compressRanges(nums) {
   return out;
 }
 
+/** Remove comments and string/char literals so brace counting isn't fooled by `}` in text. */
+function stripLiterals(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\/\/[^\n]*/g, '')
+    .replace(/"(\\.|[^"\\])*"/g, '""')
+    .replace(/'(\\.|[^'\\])*'/g, "''");
+}
+
+/**
+ * Cheap local validity check on generated Java BEFORE spending a compile cycle.
+ * Catches the common weak-model failures: markdown fences, truncation, no class,
+ * unbalanced braces. Returns { ok, reason }.
+ */
+function sanityValidJava(code) {
+  if (!code || !code.trim()) return { ok: false, reason: 'empty output' };
+  if (code.includes('```')) return { ok: false, reason: 'contains markdown fence' };
+  if (!/^\s*package\s+[\w.]+\s*;/m.test(code)) return { ok: false, reason: 'missing package declaration' };
+  if (!/\b(class|interface|enum|record)\s+\w+/.test(code)) return { ok: false, reason: 'no type declaration' };
+  const stripped = stripLiterals(code);
+  const opens = (stripped.match(/{/g) || []).length;
+  const closes = (stripped.match(/}/g) || []).length;
+  if (opens !== closes) return { ok: false, reason: `unbalanced braces (${opens} open / ${closes} close)` };
+  if (!code.trimEnd().endsWith('}')) return { ok: false, reason: 'truncated (does not end with })' };
+  return { ok: true };
+}
+
 /** Strip markdown fences if a model adds them despite instructions. */
 function extractJava(raw) {
   const m = raw.match(/```(?:java)?\s*([\s\S]*?)```/);
@@ -186,4 +215,4 @@ function extractJava(raw) {
   return code;
 }
 
-module.exports = { systemPrompt, generatePrompt, extendPrompt, fixPrompt, coveragePrompt, extractJava, compressRanges };
+module.exports = { systemPrompt, generatePrompt, extendPrompt, fixPrompt, coveragePrompt, extractJava, sanityValidJava, compressRanges };
